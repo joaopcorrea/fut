@@ -1,1 +1,42 @@
-<div class="field"></div>
+<div class="board">
+  <img clas="background">
+  <div class="header">
+    <div class="homeTeam player"></div>
+    <span class="team">Dortmund</span>
+    <img class="homeTeam logo">
+    <span class="scoreboard">0 - 2</span>
+    <img class="awayTeam logo">
+    <span class="team">Barcelona</span>
+    <div class="awayTeam player"></div>
+  </div>
+  <div class="body">
+    <div class="home team-list">
+      <p *ngFor="let player of homeTeam">
+        <span class="number">{{player.number}}</span>
+        <span class="name">{{player.name}}</span>
+      </p>
+    </div>
+    <div class="field">
+      <img src="../../assets/img/field.png">
+      <div *ngFor="let player of homeTeam" 
+          class="homeTeam player"
+          [style.left.%]="5 + (player.x * .85)"
+          [style.top.%]="5 + (player.y * .85)">
+        {{player.number}}
+      </div>
+      <div *ngFor="let player of awayTeam" 
+          class="awayTeam player"
+          [style.left.%]="5 + (player.x * .85)"
+          [style.top.%]="5 + (player.y * .85)">
+        {{player.number}}
+      </div>
+    </div>
+    <div class="away team-list">
+      <p *ngFor="let player of awayTeam">
+        <span class="name">{{player.name}}</span>
+        <span class="number">{{player.number}}</span>
+      </p>
+    </div>
+  </div>
+  <button (click)="run()">RUN</button>
+</div>
