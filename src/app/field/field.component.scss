@@ -99,6 +99,7 @@
       width: 60%;
 
       img {
+        border-radius: 4%;
         height: 100%;
         opacity: .7;
         src: url('../../assets/img/field.png');
@@ -125,6 +126,13 @@
           border: .15vh solid black;
           background: linear-gradient(25deg, rgba(165,0,68,1) 55%, rgba(0,77,152,1) 85%, rgba(254,254,254,1) 100%);
           color: #FAFAFA;
+        }
+        
+        &.hasBall {
+          background-image: url('../../assets/img/ball.png');
+          background-size: cover;
+          background-color: #FAFAFA;
+          font-size: 0;
         }
       }
     }
