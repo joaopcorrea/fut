@@ -14,10 +14,15 @@ export class FieldComponent implements OnInit {
   homeTeam: IPlayer[] = [];
   awayTeam: IPlayer[] = [];
   players: IPlayer[] = [];
-  playerWithBall = 10;
+  
+  playerWithBall = 0;
+  teamWithBall: TeamSide = TeamSide.HOME;
 
   homeTeamScore = 0;
   awayTeamScore = 0;
+
+
+  private moveUnits = 3;
 
   constructor() { }
 
@@ -27,6 +32,8 @@ export class FieldComponent implements OnInit {
         id: 1,
         name: 'Keylor Navas',
         number: 1,
+        initialX: 0,
+        initialY: 50,
         x: 0,
         y: 50
       },
@@ -34,6 +41,8 @@ export class FieldComponent implements OnInit {
         id: 2,
         name: 'Sergio Ramos',
         number: 2,
+        initialX: 10,
+        initialY: 30,
         x: 10,
         y: 30
       },
@@ -41,6 +50,8 @@ export class FieldComponent implements OnInit {
         id: 3,
         name: 'Marquinhos',
         number: 5,
+        initialX: 10,
+        initialY: 70,
         x: 10,
         y: 70
       },
@@ -48,6 +59,8 @@ export class FieldComponent implements OnInit {
         id: 4,
         name: 'Marco Verratti',
         number: 4,
+        initialX: 15,
+        initialY: 10,
         x: 15,
         y: 10
       },
@@ -55,6 +68,8 @@ export class FieldComponent implements OnInit {
         id: 5,
         name: 'Gerard Piqué',
         number: 6,
+        initialX: 15,
+        initialY: 90,
         x: 15,
         y: 90
       },
@@ -62,6 +77,8 @@ export class FieldComponent implements OnInit {
         id: 6,
         name: 'Fábio M.',
         number: 16,
+        initialX: 25,
+        initialY: 40,
         x: 25,
         y: 40
       },
@@ -69,6 +86,8 @@ export class FieldComponent implements OnInit {
         id: 7,
         name: 'Linetty',
         number: 77,
+        initialX: 25,
+        initialY: 60,
         x: 25,
         y: 60
       },
@@ -76,6 +95,8 @@ export class FieldComponent implements OnInit {
         id: 8,
         name: 'O. Dembelé',
         number: 9,
+        initialX: 35,
+        initialY: 20,
         x: 35,
         y: 20
       },
@@ -83,6 +104,8 @@ export class FieldComponent implements OnInit {
         id: 9,
         name: 'Lewandowsk',
         number: 11,
+        initialX: 35,
+        initialY: 80,
         x: 35,
         y: 80
       },
@@ -90,6 +113,8 @@ export class FieldComponent implements OnInit {
         id: 10,
         name: 'C. Ronaldo',
         number: 7,
+        initialX: 45,
+        initialY: 40,
         x: 45,
         y: 40
       },
@@ -97,6 +122,8 @@ export class FieldComponent implements OnInit {
         id: 11,
         name: 'Messi',
         number: 10,
+        initialX: 45,
+        initialY: 60,
         x: 45,
         y: 60
       }
@@ -107,6 +134,8 @@ export class FieldComponent implements OnInit {
         id: 12,
         name: 'Alisson',
         number: 1,
+        initialX: 100,
+        initialY: 50,
         x: 100,
         y: 50
       },
@@ -114,6 +143,8 @@ export class FieldComponent implements OnInit {
         id: 13,
         name: 'Salah',
         number: 20,
+        initialX: 90,
+        initialY: 30,
         x: 90,
         y: 30
       },
@@ -121,6 +152,8 @@ export class FieldComponent implements OnInit {
         id: 14,
         name: 'R. Firmino',
         number: 11,
+        initialX: 90,
+        initialY: 50,
         x: 90,
         y: 50
       },
@@ -128,6 +161,8 @@ export class FieldComponent implements OnInit {
         id: 15,
         name: 'Marcelo',
         number: 4,
+        initialX: 90,
+        initialY: 70,
         x: 90,
         y: 70
       },
@@ -135,6 +170,8 @@ export class FieldComponent implements OnInit {
         id: 16,
         name: 'Mané',
         number: 15,
+        initialX: 80,
+        initialY: 10,
         x: 80,
         y: 10
       },
@@ -142,6 +179,8 @@ export class FieldComponent implements OnInit {
         id: 17,
         name: 'Witsel',
         number: 28,
+        initialX: 80,
+        initialY: 90,
         x: 80,
         y: 90
       },
@@ -149,6 +188,8 @@ export class FieldComponent implements OnInit {
         id: 18,
         name: 'Hazard',
         number: 12,
+        initialX: 70,
+        initialY: 30,
         x: 70,
         y: 30
       },
@@ -156,6 +197,8 @@ export class FieldComponent implements OnInit {
         id: 19,
         name: 'Neymar',
         number: 10,
+        initialX: 70,
+        initialY: 70,
         x: 70,
         y: 70
       },
@@ -163,6 +206,8 @@ export class FieldComponent implements OnInit {
         id: 20,
         name: 'Mbappé',
         number: 7,
+        initialX: 65,
+        initialY: 50,
         x: 65,
         y: 50
       },
@@ -170,6 +215,8 @@ export class FieldComponent implements OnInit {
         id: 21,
         name: 'Ibrahimovic',
         number: 11,
+        initialX: 55,
+        initialY: 35,
         x: 55,
         y: 35
       },
@@ -177,19 +224,42 @@ export class FieldComponent implements OnInit {
         id: 22,
         name: 'Haaland',
         number: 9,
+        initialX: 55,
+        initialY: 65,
         x: 55,
         y: 65
       },
     ]
   }
 
-  simulate() {
-    let teamSide: TeamSide = TeamSide.AWAY;
+  simulateGame() {
+    this.homeTeam.forEach(player => {
+      this.simulatePlayer(player, TeamSide.HOME)
+    });
 
-    let player = this.homeTeam.find(p => p.id == this.playerWithBall) as IPlayer;
-    if (player) teamSide = TeamSide.HOME;
-    else player = this.awayTeam.find(p => p.id == this.playerWithBall) as IPlayer;
+    this.awayTeam.forEach(player => {
+      this.simulatePlayer(player, TeamSide.AWAY)
+    });
+  }
 
+  restartGame() {
+    if (this.teamWithBall == TeamSide.HOME) 
+      this.playerWithBall = 10;
+    else
+      this.playerWithBall = 20;
+
+    this.homeTeam.forEach(player => {
+      player.x = player.initialX;
+      player.y = player.initialY;
+    });
+
+    this.awayTeam.forEach(player => {
+      player.x = player.initialX;
+      player.y = player.initialY;
+    });
+  }
+
+  simulatePlayer(player: IPlayer, teamSide: TeamSide) {
     let teamList = teamSide == TeamSide.HOME ? this.homeTeam : this.awayTeam;
     let playersInRangeToPass = this.getPlayersInRange(teamList, player,
       -20, 20, -20, 20);
@@ -201,7 +271,9 @@ export class FieldComponent implements OnInit {
     } else if (action == Action.PASS) {
       this.pass(player, teamSide, playersInRangeToPass);
     } else if (action == Action.KICK) {
-
+      this.kick(player, teamSide);
+    } else if (action == Action.RETREAT) {
+      this.runBackward(player, teamSide);
     }
   }
 
@@ -215,7 +287,7 @@ export class FieldComponent implements OnInit {
         -5, 0, -5, 5)
     }
 
-    if (!playersInRange.length) {
+    if (!playersInRange.length || this.playerWithBall != player.id) {
       this.runForward(player, teamSide);
     } else {
       console.log('Jogadores por perto: ');
@@ -226,7 +298,33 @@ export class FieldComponent implements OnInit {
   }
 
   runForward(player: IPlayer, teamSide: TeamSide) {
-    player!.x += teamSide == TeamSide.HOME ? 5 : -5;
+    player.x += this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
+    player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
+
+    if (player.x < 0) player.x = 0;
+    if (player.x > 100) player.x = 100;
+    if (player.y < 0) player.y = 0;
+    if (player.y > 100) player.y = 100;
+
+    console.log(`${player?.name} avança!`);
+  }
+
+  runBackward(player: IPlayer, teamSide: TeamSide) {
+    if (player.x <= player.initialX - this.moveUnits ||
+        player.x >= player.initialX + this.moveUnits) {
+      player.x -= this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
+    }
+
+    if (player.y <= player.initialY - this.moveUnits ||
+        player.y >= player.initialY + this.moveUnits) {
+      player.y -= this.getRndInteger(-this.moveUnits, this.moveUnits);
+    }
+
+    if (player.x < 0) player.x = 0;
+    if (player.x > 100) player.x = 100;
+    if (player.y < 0) player.y = 0;
+    if (player.y > 100) player.y = 100;
+
     console.log(`${player?.name} avança!`);
   }
 
@@ -248,6 +346,9 @@ export class FieldComponent implements OnInit {
     if (random >= .5) {
       this.playerWithBall = playerDribbled.id;
       console.log('o marcador está esperto, acertou o bote na hora');
+
+      this.teamWithBall = this.teamWithBall == 
+        TeamSide.HOME ? TeamSide.AWAY : TeamSide.HOME;
     } else {
       console.log('que lindo drible!');
     }
@@ -268,9 +369,51 @@ export class FieldComponent implements OnInit {
       p.y >= player.y + minY && p.y <= player.y + maxY);
   }
 
+  kick(player: IPlayer, teamSide: TeamSide) {
+    console.log(`${player.name} chutou a bola para o gol`);
+    console.log('gooooooool');
+
+    if (teamSide == TeamSide.HOME) {
+      this.homeTeamScore++;
+      this.teamWithBall = TeamSide.AWAY;
+    } else {
+      this.awayTeamScore++;
+      this.teamWithBall = TeamSide.HOME;
+    }
+
+    this.restartGame();
+  }
+
   chooseAction(player: IPlayer, teamSide: TeamSide, playersInRangeToPass: IPlayer[]) {
-    if (!playersInRangeToPass.length)
-      return 1;
+    if (this.playerWithBall != player.id) {
+      if (this.teamWithBall == teamSide)
+        return Action.ADVANCE;
+      else
+        return Action.RETREAT;
+    }
+    
+    let minXToKick = 0;
+    let maxXToKick = 0;
+    let minYToKick = 0;
+    let maxYToKick = 0;
+    
+    minYToKick = 35;
+    maxYToKick = 65;
+
+    if (teamSide == TeamSide.HOME) {
+      minXToKick = 90;
+      maxXToKick = 100;
+    } else {
+      minXToKick = 0;
+      maxXToKick = 10;
+    }
+    
+    if (player.x >= minXToKick && player.x <= maxXToKick &&
+        player.y >= minYToKick && player.y <= maxYToKick) {
+      return Action.KICK;
+    }
+    else if (!playersInRangeToPass.length)
+      return Action.ADVANCE;
     else
       return this.getRndInteger(1, 2);
   }
@@ -280,6 +423,11 @@ export class FieldComponent implements OnInit {
   }
 
   runClick() {
+    if (this.teamWithBall == TeamSide.HOME) 
+      this.playerWithBall = 10;
+    else
+      this.playerWithBall = 20;
+
     if (this.isRunning) {
       clearInterval(this.timer);
       this.timer = null;
@@ -288,8 +436,8 @@ export class FieldComponent implements OnInit {
       this.isRunning = true;
 
       this.timer = setInterval(() => {
-        this.simulate();
-      }, 500);
+        this.simulateGame();
+      }, 100);
     }
   }
 }
@@ -303,4 +451,5 @@ enum Action {
   ADVANCE = 1,
   PASS = 2,
   KICK = 3,
+  RETREAT = 4,
 }
