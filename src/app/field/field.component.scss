@@ -120,12 +120,16 @@
           border: .15vh solid black;
           background: linear-gradient(25deg, 
             rgba(253,187,45,1) 56%, rgba(254,254,254,1) 100%);
+
+          left: 30%;
         }
 
         &.awayTeam {
           border: .15vh solid black;
           background: linear-gradient(25deg, rgba(165,0,68,1) 55%, rgba(0,77,152,1) 85%, rgba(254,254,254,1) 100%);
           color: #FAFAFA;
+
+          left: 70%
         }
         
         &.hasBall {
@@ -134,6 +138,17 @@
           background-color: #FAFAFA;
           font-size: 0;
         }
+      }
+
+      .ball {
+        background-image: url('../../assets/img/ball.png');
+          background-size: cover;
+          background-color: #FAFAFA;
+        border: 1px solid black;
+        border-radius: 50%;
+        height: 1.5vh;
+        width: 1.5vh;
+        position: absolute;
       }
     }
   }

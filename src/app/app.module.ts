@@ -6,13 +6,15 @@ import { AppComponent } from './app.component';
 import { FieldComponent } from './field/field.component';
 import { PlayerComponent } from './player/player.component';
 
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BallComponent } from './ball/ball.component'
 
 @NgModule({
   declarations: [
     AppComponent,
     FieldComponent,
-    PlayerComponent
+    PlayerComponent,
+    BallComponent
   ],
   imports: [
     BrowserModule,

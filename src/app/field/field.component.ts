@@ -1,5 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, OnInit } from '@angular/core';
+import { Ball } from '../ball/ball';
 import { IPlayer } from '../player/iplayer';
 
 @Component({
@@ -35,6 +36,8 @@ export class FieldComponent implements OnInit {
   
   public animationState = 'move';
 
+  ball: Ball = { x: 51, y: 50 };
+
   timer: any;
   isRunning: boolean = false;
 
@@ -50,7 +53,7 @@ export class FieldComponent implements OnInit {
 
 
   private moveUnits = 5;
-  public msToSimulate = 1000;
+  public msToSimulate = 500;
 
   constructor() { }
 
@@ -268,6 +271,20 @@ export class FieldComponent implements OnInit {
     this.awayTeam.forEach(player => {
       this.simulatePlayer(player, TeamSide.AWAY)
     });
+
+    this.setBallPosition();
+  }
+
+  setBallPosition() {
+    const isHomeTeam = this.teamWithBall == TeamSide.HOME;
+    let player: IPlayer;
+    if (isHomeTeam)
+      player = this.homeTeam.find(p => p.id == this.playerWithBall) as IPlayer;
+    else 
+      player = this.awayTeam.find(p => p.id == this.playerWithBall) as IPlayer;
+
+    this.ball.x = player.x + (isHomeTeam ? 2 : -1);
+    this.ball.y = player.y + 2.5;
   }
 
   restartGame() {
