@@ -1,12 +1,39 @@
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, OnInit } from '@angular/core';
 import { IPlayer } from '../player/iplayer';
 
 @Component({
   selector: 'app-field',
   templateUrl: './field.component.html',
-  styleUrls: ['./field.component.scss']
+  styleUrls: ['./field.component.scss'],
+  animations: [
+    trigger('moveState', [
+      state('move', 
+        style({
+          left: '{{ x }}%',
+          top: '{{ y }}%'
+        }),
+        { params: { x: '', y: '' } }
+      ),
+      state('stop',
+        style({
+          left: '{{ x }}%',
+          top: '{{ y }}%'
+        }),
+        { params: { x: '', y: '' } }
+      ),
+      transition('* <=> *', animate('{{ ms }}ms'))
+    ])
+  ]
 })
 export class FieldComponent implements OnInit {
+  animationDone() {
+    setTimeout(() => {
+      this.animationState = 'stop';
+    });
+  }
+  
+  public animationState = 'move';
 
   timer: any;
   isRunning: boolean = false;
@@ -22,7 +49,8 @@ export class FieldComponent implements OnInit {
   awayTeamScore = 0;
 
 
-  private moveUnits = 3;
+  private moveUnits = 5;
+  public msToSimulate = 1000;
 
   constructor() { }
 
@@ -259,7 +287,7 @@ export class FieldComponent implements OnInit {
     });
   }
 
-  simulatePlayer(player: IPlayer, teamSide: TeamSide) {
+  simulatePlayer(player: IPlayer, teamSide: TeamSide) {    
     let teamList = teamSide == TeamSide.HOME ? this.homeTeam : this.awayTeam;
     let playersInRangeToPass = this.getPlayersInRange(teamList, player,
       -20, 20, -20, 20);
@@ -298,6 +326,7 @@ export class FieldComponent implements OnInit {
   }
 
   runForward(player: IPlayer, teamSide: TeamSide) {
+    this.animationState = 'stop';
     player.x += this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
     player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
 
@@ -305,6 +334,7 @@ export class FieldComponent implements OnInit {
     if (player.x > 100) player.x = 100;
     if (player.y < 0) player.y = 0;
     if (player.y > 100) player.y = 100;
+    this.animationState = 'move';
 
     console.log(`${player?.name} avança!`);
   }
@@ -423,6 +453,10 @@ export class FieldComponent implements OnInit {
   }
 
   runClick() {
+    // this.animationState = 
+    //   this.animationState == 'move' ? 'stop' : 'move';
+    // return;
+
     if (this.teamWithBall == TeamSide.HOME) 
       this.playerWithBall = 10;
     else
@@ -437,7 +471,7 @@ export class FieldComponent implements OnInit {
 
       this.timer = setInterval(() => {
         this.simulateGame();
-      }, 100);
+      }, this.msToSimulate);
     }
   }
 }

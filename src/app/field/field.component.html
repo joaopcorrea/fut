@@ -20,15 +20,16 @@
       <img src="../../assets/img/field.png">
       <div *ngFor="let player of homeTeam" 
           class="homeTeam player"
-          [style.left.%]="5 + (player.x * .865)"
-          [style.top.%]="5 + (player.y * .85)"
+          (@moveState.done)="animationDone()"
+          [@moveState]="{value: animationState, params: {x: 5 + (player.x * .865), y: 5 + (player.y * .85), ms: msToSimulate / 2}}"
           [class.hasBall]="playerWithBall == player.id">
         {{player.number}}
       </div>
+      {{animationState}}
       <div *ngFor="let player of awayTeam" 
           class="awayTeam player"
-          [style.left.%]="5 + (player.x * .865)"
-          [style.top.%]="5 + (player.y * .85)"
+          (@moveState.done)="animationDone()"
+          [@moveState]="{value: animationState, params: {x: 5 + (player.x * .865), y: 5 + (player.y * .85), ms: msToSimulate / 2}}"
           [class.hasBall]="playerWithBall == player.id">
         {{player.number}}
       </div>

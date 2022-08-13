@@ -6,6 +6,8 @@ import { AppComponent } from './app.component';
 import { FieldComponent } from './field/field.component';
 import { PlayerComponent } from './player/player.component';
 
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -14,7 +16,8 @@ import { PlayerComponent } from './player/player.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
