@@ -36,7 +36,7 @@ export class FieldComponent implements OnInit {
   
   public animationState = 'move';
 
-  ball: Ball = { x: 51, y: 50 };
+  ball: Ball = { x: 112, y: 70 };
 
   timer: any;
   isRunning: boolean = false;
@@ -52,8 +52,8 @@ export class FieldComponent implements OnInit {
   awayTeamScore = 0;
 
 
-  private moveUnits = 5;
-  public msToSimulate = 500;
+  private moveUnits = 3;
+  public msToSimulate = 300;
 
   constructor() { }
 
@@ -417,18 +417,65 @@ export class FieldComponent implements OnInit {
   }
 
   kick(player: IPlayer, teamSide: TeamSide) {
-    console.log(`${player.name} chutou a bola para o gol`);
-    console.log('gooooooool');
+    console.log(`kick: ${player.name} chutou a bola para o gol`);
+    
+    let restart = true;
+    //verifica se acertou gol
+    switch (this.getRndInteger(1, 2))
+    {
+      // se errou, verifica qual lado errou
+      case 1:
+        console.log('kick: errou o chute');
+        if (this.getRndInteger(1, 2) == 1) {
+          this.ball.x = 
+            teamSide == TeamSide.HOME ? 106 : -4;
+          this.ball.y = 30
+        } else {
+          this.ball.x = 
+            teamSide == TeamSide.HOME ? 112 : -10;
+          this.ball.y = 70
+        }
+        
+        this.playerWithBall = 
+            teamSide == TeamSide.HOME ? 12 : 1;
+        break;
 
-    if (teamSide == TeamSide.HOME) {
-      this.homeTeamScore++;
-      this.teamWithBall = TeamSide.AWAY;
-    } else {
-      this.awayTeamScore++;
-      this.teamWithBall = TeamSide.HOME;
+      // se acertou, verifica se o goleiro pegou a bola
+      case 2:
+        console.log('kick: acertou o chute');
+        if (this.getRndInteger(1,2) == 1) {
+          console.log('kick: goleiro pegou');
+          this.playerWithBall = 
+            teamSide == TeamSide.HOME ? 12 : 1;
+          
+          restart = false;
+        } else {
+          console.log('kick: gooooooool');
+
+          if (teamSide == TeamSide.HOME) {
+            this.homeTeamScore++;
+          } else {
+            this.awayTeamScore++;
+          }
+        }
+        break;
     }
 
-    this.restartGame();
+    this.teamWithBall =
+      teamSide == TeamSide.HOME ? TeamSide.AWAY : TeamSide.HOME;
+
+    if (restart) {
+      (async () => { 
+        // Do something before delay
+        console.log('before delay')
+
+        await new Promise(f => setTimeout(f, 2000));
+
+        // Do something after
+        console.log('after delay')
+    })();
+        this.restartGame();
+    }
   }
 
   chooseAction(player: IPlayer, teamSide: TeamSide, playersInRangeToPass: IPlayer[]) {
