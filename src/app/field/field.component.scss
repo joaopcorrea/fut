@@ -8,54 +8,78 @@
   background-position: center;
 
   .header {
+    align-items: center;
     display: flex;
     justify-content: space-around;
-    align-items: center;
     height: 20vh;
+    margin-top: 5vh;
 
-    .logo {
-      height: 3.5em;
-
-      &.homeTeam {
-        content: url('../../assets/img/dortmund-logo.png');
-      }
-
-      &.awayTeam {
-        content: url('../../assets/img/barcelona-logo.png');
-      }
-    }
-
-    .team {
-      font-size: 2em;
-      color: #FAFAFA;
-      text-transform: uppercase;
-    }
-
-    .scoreboard {
-      font-size: 3em;
-      color: #58e1e1;
-    }
-
-    .player {
+    .header-team {
       align-items: center;
-      border-radius: 50%;
+      border-bottom: 1px solid #3a8b8b;
       display: flex;
-      font-weight: 600;
-      height: 3vh;
-      justify-content: center;
-      width: 3vh;
-      margin: 0 10vh;
+      padding: 2vh 0;
+      justify-content: space-around;
+      width: 40%;
+  
+      .logo {
+        height: 3.5em;
+  
+        &.homeTeam {
+          content: url('../../assets/img/dortmund-logo.png');
+        }
+  
+        &.awayTeam {
+          content: url('../../assets/img/barcelona-logo.png');
+        }
+      }
+  
+      .team {
+        font-size: 2em;
+        color: #FAFAFA;
+        text-transform: uppercase;
+      }
+  
+      .player {
+        align-items: center;
+        border-radius: 50%;
+        display: flex;
+        font-weight: 600;
+        height: 3vh;
+        justify-content: center;
+        width: 3vh;
+        margin: 0 10vh;
+  
+        &.homeTeam {
+          border: .15vh solid black;
+          background: linear-gradient(25deg, 
+            rgba(253,187,45,1) 56%, rgba(254,254,254,1) 100%);
+        }
+  
+        &.awayTeam {
+          border: .15vh solid black;
+          background: linear-gradient(25deg, rgba(165,0,68,1) 55%, rgba(0,77,152,1) 85%, rgba(254,254,254,1) 100%);
+          color: #FAFAFA;
+        }
+      }
+    }
 
-      &.homeTeam {
-        border: .15vh solid black;
-        background: linear-gradient(25deg, 
-          rgba(253,187,45,1) 56%, rgba(254,254,254,1) 100%);
+    .header-info {
+      align-items: center;
+      color: #58e1e1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      padding-top: 2vh;
+
+      .scoreboard {
+        font-size: 3em;
+        color: #58e1e1;
       }
 
-      &.awayTeam {
-        border: .15vh solid black;
-        background: linear-gradient(25deg, rgba(165,0,68,1) 55%, rgba(0,77,152,1) 85%, rgba(254,254,254,1) 100%);
-        color: #FAFAFA;
+      .time {
+        font-weight: 300;
       }
     }
   }
@@ -63,7 +87,7 @@
   .body {
     justify-content: center;
     display: flex;
-    height: 75vh;
+    height: 70vh;
     padding: 0 5%;
     width: 90%;
 
@@ -151,5 +175,60 @@
         position: absolute;
       }
     }
+  }
+
+  .goalNotification {
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    position: absolute;
+    background-color: #2f2da1;
+    color: #FAFAFA;
+    opacity: 1;
+    height: 150px;
+    justify-content: center;
+    margin: auto;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: -100px;
+    bottom: 0;
+    width: 400px;
+    font-size: 2em;
+
+    opacity: 0;
+
+    &.show {
+      opacity: 1;
+      animation-name: notification-pop;
+      animation-duration: 500ms;
+    }
+
+    &.hide {
+      animation-name: notification-hide;
+      animation-duration: 500ms;
+    }
+  }
+}
+
+@keyframes notification-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes notification-hide {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(30px);
   }
 }

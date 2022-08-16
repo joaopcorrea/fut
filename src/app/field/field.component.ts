@@ -28,17 +28,17 @@ import { IPlayer } from '../player/iplayer';
   ]
 })
 export class FieldComponent implements OnInit {
-  animationDone() {
-    setTimeout(() => {
-      this.animationState = 'stop';
-    });
-  }
   
-  public animationState = 'move';
+  public animationState = 'stop';
 
-  ball: Ball = { x: 112, y: 70 };
+  gameMinutes = 0;
+  gameSeconds = 0;
 
-  timer: any;
+  ball: Ball = { x: 50.5, y: 50 };
+  stopBallPosition = false;
+
+  simulationTimer: any;
+  gameTimer: any;
   isRunning: boolean = false;
 
   homeTeam: IPlayer[] = [];
@@ -48,6 +48,17 @@ export class FieldComponent implements OnInit {
   playerWithBall = 0;
   teamWithBall: TeamSide = TeamSide.HOME;
 
+  playerScored = {} as IPlayer;
+
+  homeGoalKeeper = 1;
+  awayGoalKeeper = 12;
+
+  homeStartingPlayer = 10;
+  homeSecondStartingPlayer = 11;
+
+  awayStartingPlayer = 21;
+  awaySecondStartingPlayer = 22;
+
   homeTeamScore = 0;
   awayTeamScore = 0;
 
@@ -55,7 +66,32 @@ export class FieldComponent implements OnInit {
   private moveUnits = 3;
   public msToSimulate = 300;
 
+  private isGoalKick = false;
+  private goalKickSide: GoalKickSide = GoalKickSide.DOWN;
+  private isGoal = false;
+
+  showGoalNotification = false;
+  hideGoalNotification = false;
+
   constructor() { }
+
+  showGoal() {
+    setTimeout(() => {
+      this.hideGoalNotification = false;
+      this.showGoalNotification = true;
+
+      setTimeout(() => {
+        this.hideGoalNotification = true;
+        this.showGoalNotification = false;
+      }, this.msToSimulate * 8);
+    }, this.msToSimulate);
+  }
+
+  animationDone() {
+    setTimeout(() => {
+      this.animationState = 'stop';
+    });
+  }
 
   ngOnInit(): void {
     this.homeTeam = [
@@ -145,18 +181,18 @@ export class FieldComponent implements OnInit {
         name: 'C. Ronaldo',
         number: 7,
         initialX: 45,
-        initialY: 40,
+        initialY: 30,
         x: 45,
-        y: 40
+        y: 30
       },
       {
         id: 11,
         name: 'Messi',
         number: 10,
         initialX: 45,
-        initialY: 60,
+        initialY: 70,
         x: 45,
-        y: 60
+        y: 70
       }
     ];
 
@@ -247,18 +283,18 @@ export class FieldComponent implements OnInit {
         name: 'Ibrahimovic',
         number: 11,
         initialX: 55,
-        initialY: 35,
+        initialY: 30,
         x: 55,
-        y: 35
+        y: 30
       },
       {
         id: 22,
         name: 'Haaland',
         number: 9,
         initialX: 55,
-        initialY: 65,
+        initialY: 70,
         x: 55,
-        y: 65
+        y: 70
       },
     ]
   }
@@ -272,10 +308,78 @@ export class FieldComponent implements OnInit {
       this.simulatePlayer(player, TeamSide.AWAY)
     });
 
+    this.animationState = 'move';
+
+    if (this.isGoal) {
+      this.scoreGoal(this.teamWithBall);
+      this.isGoal = false;
+      return;
+    } 
+    else if (this.isGoalKick) {
+      this.goalKick(this.teamWithBall);
+      this.isGoalKick = false;
+      return;
+    }
+
     this.setBallPosition();
   }
 
+  resetPlayerPositions() {
+    this.homeTeam.forEach(player => {
+      player.x = player.initialX;
+      player.y = player.initialY;
+    });
+
+    this.awayTeam.forEach(player => {
+      player.x = player.initialX;
+      player.y = player.initialY;
+    });
+
+    this.animationState = 'move';
+  }
+
+  stopSimulationTimer() {
+    this.stopGameTimer();
+    clearInterval(this.simulationTimer);
+    this.simulationTimer = null;
+    this.isRunning = false;
+  }
+
+  startSimulationTimer() {
+    this.startGameTimer();
+    this.isRunning = true;
+
+    this.animationState = 'move';
+    setTimeout(() => {
+      this.animationState = 'stop';
+    }, this.msToSimulate);
+    
+    this.simulationTimer = setInterval(() => {
+      this.simulateGame();
+    }, this.msToSimulate);
+  }
+
+  stopGameTimer() {
+    clearInterval(this.gameTimer);
+  }
+
+  startGameTimer() {
+    this.gameTimer = setInterval(() => {
+      if (this.gameSeconds == 59) {
+        this.gameMinutes++;
+        this.gameSeconds = 0;
+      } else {
+        this.gameSeconds++;
+      }
+    }, this.msToSimulate / 10);
+  }
+
   setBallPosition() {
+    if (this.stopBallPosition) {
+      this.stopBallPosition = false;
+      return;
+    }
+    
     const isHomeTeam = this.teamWithBall == TeamSide.HOME;
     let player: IPlayer;
     if (isHomeTeam)
@@ -287,21 +391,165 @@ export class FieldComponent implements OnInit {
     this.ball.y = player.y + 2.5;
   }
 
-  restartGame() {
-    if (this.teamWithBall == TeamSide.HOME) 
-      this.playerWithBall = 10;
-    else
-      this.playerWithBall = 20;
+  goalKick(lastTeamSide: TeamSide) {
+    this.stopSimulationTimer();
 
-    this.homeTeam.forEach(player => {
-      player.x = player.initialX;
-      player.y = player.initialY;
-    });
+    console.log('kick: tiro de meta');
 
-    this.awayTeam.forEach(player => {
-      player.x = player.initialX;
-      player.y = player.initialY;
-    });
+    setTimeout(() => {
+      let gk: IPlayer;
+
+      this.resetPlayerPositions();
+
+      if (lastTeamSide == TeamSide.HOME) {
+        this.playerWithBall = this.awayGoalKeeper;
+        this.teamWithBall = TeamSide.AWAY;
+        this.ball = {
+          x: 99,
+          y: this.goalKickSide == GoalKickSide.UP ? 40 : 62
+        }
+
+        gk = this.awayTeam.find(p => p.id == this.awayGoalKeeper) as IPlayer;
+        gk.x = 102;
+        gk.y = this.goalKickSide == GoalKickSide.UP ? 40 : 62;
+      } else {
+        this.playerWithBall = this.homeGoalKeeper;
+        this.teamWithBall = TeamSide.HOME;
+        this.ball = {
+          x: 3,
+          y: this.goalKickSide == GoalKickSide.UP ? 40 : 62
+        }
+
+        gk = this.homeTeam.find(p => p.id == this.homeGoalKeeper) as IPlayer;
+        gk.x = -2;
+        gk.y = this.goalKickSide == GoalKickSide.UP ? 40 : 62;
+      }
+
+      setTimeout(() => {
+        this.startSimulationTimer();
+      }, this.msToSimulate * 2);
+
+    }, this.msToSimulate * 5);
+  }
+
+  scoreGoal(teamScored: TeamSide) {
+    this.stopSimulationTimer();
+
+    this.showGoal();
+
+    setTimeout(() => {
+      this.resetPlayerPositions();
+
+      if (teamScored == TeamSide.HOME) {
+        this.homeTeamScore++;
+        this.playerWithBall = this.awayStartingPlayer;
+        this.teamWithBall = TeamSide.AWAY;
+
+        this.ball = { x: 50.5, y: 50 };
+
+        let player = this.awayTeam.find(p => p.id == this.awayStartingPlayer) as IPlayer;
+        player.x = 52;
+        player.y = 45;
+
+        player = this.awayTeam.find(p => p.id == this.awaySecondStartingPlayer) as IPlayer;
+        player.x = 52;
+        player.y = 55;
+      } else {
+        this.awayTeamScore++;
+        this.playerWithBall = this.homeStartingPlayer;
+        this.teamWithBall = TeamSide.HOME;
+
+        this.ball = { x: 50.5, y: 50 };
+
+        let player = this.homeTeam.find(p => p.id == this.homeStartingPlayer) as IPlayer;
+        player.x = 47;
+        player.y = 45
+
+        player = this.homeTeam.find(p => p.id == this.homeSecondStartingPlayer) as IPlayer;
+        player.x = 47;
+        player.y = 55;
+      }
+
+      setTimeout(() => {
+        this.startSimulationTimer();
+      }, this.msToSimulate * 4);
+
+    }, this.msToSimulate * 10);
+  }
+
+  kick(player: IPlayer, teamSide: TeamSide) {
+    console.log(`kick: ${player.name} chutou a bola para o gol`);
+    
+    //verifica se acertou gol
+    switch (this.getRndInteger(1, 2))
+    {
+      // se errou, verifica qual lado errou
+      case 1:
+        console.log('kick: errou o chute');
+
+        this.ball = { 
+          x: teamSide == TeamSide.HOME ? 
+            this.getRndInteger(110, 115) : 
+            this.getRndInteger(-12, -7),
+
+          y: this.getRndInteger(20,80)
+        }
+
+        this.goalKickSide =
+          this.ball.y > 50 ? GoalKickSide.DOWN : GoalKickSide.UP;
+        
+        this.isGoalKick = true;
+        break;
+
+      // se acertou, verifica se o goleiro pegou a bola
+      case 2:
+        console.log('kick: acertou o chute');
+        if (this.getRndInteger(1, 2) == 1) {
+          console.log('kick: goleiro pegou');
+
+          if (teamSide == TeamSide.HOME) {
+            this.playerWithBall = this.awayGoalKeeper;
+            this.teamWithBall = TeamSide.AWAY;
+          } else {
+            this.playerWithBall = this.homeGoalKeeper;
+            this.teamWithBall = TeamSide.HOME;
+          }
+        } else {
+          console.log('kick: gooooooool');
+
+          this.playerScored = player;
+
+          this.ball = {
+            x: teamSide == TeamSide.HOME ? 105 : -3,
+            y: 50.5
+          }
+
+          this.isGoal = true;
+        }
+        break;
+    }
+  }
+
+  getRndInteger(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+  }
+
+  runClick() {
+    if (!this.playerWithBall) {
+      if (this.teamWithBall == TeamSide.HOME) 
+        this.playerWithBall = 10;
+      else
+        this.playerWithBall = 20;
+    }
+
+    if (this.isRunning) {
+      this.stopSimulationTimer();
+    } else {
+      this.isRunning = true;
+      setTimeout(() => {
+        this.startSimulationTimer();
+      }, this.msToSimulate);
+    }
   }
 
   simulatePlayer(player: IPlayer, teamSide: TeamSide) {    
@@ -311,14 +559,22 @@ export class FieldComponent implements OnInit {
 
     let action: Action = this.chooseAction(player, teamSide, playersInRangeToPass);
 
-    if (action == Action.ADVANCE) {
-      this.advance(player, teamSide);
-    } else if (action == Action.PASS) {
-      this.pass(player, teamSide, playersInRangeToPass);
-    } else if (action == Action.KICK) {
-      this.kick(player, teamSide);
-    } else if (action == Action.RETREAT) {
-      this.runBackward(player, teamSide);
+    switch(action) {
+      case Action.ADVANCE:
+        this.advance(player, teamSide);
+        break;
+
+      case Action.PASS:
+        this.pass(player, teamSide, playersInRangeToPass);
+        break;
+
+      case Action.KICK:
+        this.kick(player, teamSide);
+        break;
+
+      case Action.RETREAT:
+        this.runBackward(player, teamSide);
+        break;
     }
   }
 
@@ -343,7 +599,6 @@ export class FieldComponent implements OnInit {
   }
 
   runForward(player: IPlayer, teamSide: TeamSide) {
-    this.animationState = 'stop';
     player.x += this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
     player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
 
@@ -351,7 +606,6 @@ export class FieldComponent implements OnInit {
     if (player.x > 100) player.x = 100;
     if (player.y < 0) player.y = 0;
     if (player.y > 100) player.y = 100;
-    this.animationState = 'move';
 
     console.log(`${player?.name} avança!`);
   }
@@ -416,67 +670,7 @@ export class FieldComponent implements OnInit {
       p.y >= player.y + minY && p.y <= player.y + maxY);
   }
 
-  kick(player: IPlayer, teamSide: TeamSide) {
-    console.log(`kick: ${player.name} chutou a bola para o gol`);
-    
-    let restart = true;
-    //verifica se acertou gol
-    switch (this.getRndInteger(1, 2))
-    {
-      // se errou, verifica qual lado errou
-      case 1:
-        console.log('kick: errou o chute');
-        if (this.getRndInteger(1, 2) == 1) {
-          this.ball.x = 
-            teamSide == TeamSide.HOME ? 106 : -4;
-          this.ball.y = 30
-        } else {
-          this.ball.x = 
-            teamSide == TeamSide.HOME ? 112 : -10;
-          this.ball.y = 70
-        }
-        
-        this.playerWithBall = 
-            teamSide == TeamSide.HOME ? 12 : 1;
-        break;
-
-      // se acertou, verifica se o goleiro pegou a bola
-      case 2:
-        console.log('kick: acertou o chute');
-        if (this.getRndInteger(1,2) == 1) {
-          console.log('kick: goleiro pegou');
-          this.playerWithBall = 
-            teamSide == TeamSide.HOME ? 12 : 1;
-          
-          restart = false;
-        } else {
-          console.log('kick: gooooooool');
-
-          if (teamSide == TeamSide.HOME) {
-            this.homeTeamScore++;
-          } else {
-            this.awayTeamScore++;
-          }
-        }
-        break;
-    }
-
-    this.teamWithBall =
-      teamSide == TeamSide.HOME ? TeamSide.AWAY : TeamSide.HOME;
-
-    if (restart) {
-      (async () => { 
-        // Do something before delay
-        console.log('before delay')
-
-        await new Promise(f => setTimeout(f, 2000));
-
-        // Do something after
-        console.log('after delay')
-    })();
-        this.restartGame();
-    }
-  }
+  
 
   chooseAction(player: IPlayer, teamSide: TeamSide, playersInRangeToPass: IPlayer[]) {
     if (this.playerWithBall != player.id) {
@@ -511,33 +705,6 @@ export class FieldComponent implements OnInit {
     else
       return this.getRndInteger(1, 2);
   }
-
-  getRndInteger(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
-  }
-
-  runClick() {
-    // this.animationState = 
-    //   this.animationState == 'move' ? 'stop' : 'move';
-    // return;
-
-    if (this.teamWithBall == TeamSide.HOME) 
-      this.playerWithBall = 10;
-    else
-      this.playerWithBall = 20;
-
-    if (this.isRunning) {
-      clearInterval(this.timer);
-      this.timer = null;
-      this.isRunning = false;
-    } else {
-      this.isRunning = true;
-
-      this.timer = setInterval(() => {
-        this.simulateGame();
-      }, this.msToSimulate);
-    }
-  }
 }
 
 enum TeamSide {
@@ -550,4 +717,9 @@ enum Action {
   PASS = 2,
   KICK = 3,
   RETREAT = 4,
+}
+
+enum GoalKickSide {
+  DOWN,
+  UP
 }

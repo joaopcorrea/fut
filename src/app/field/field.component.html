@@ -1,13 +1,24 @@
 <div class="board">
   <img clas="background">
   <div class="header">
-    <div class="homeTeam player"></div>
-    <span class="team">Dortmund</span>
-    <img class="homeTeam logo">
-    <span class="scoreboard">{{homeTeamScore}} - {{awayTeamScore}}</span>
-    <img class="awayTeam logo">
-    <span class="team">Barcelona</span>
-    <div class="awayTeam player"></div>
+    <div class="header-team">
+      <div class="homeTeam player"></div>
+      <span class="team">Dortmund</span>
+      <img class="homeTeam logo">      
+    </div>
+    <div class="header-info">
+      <span class="scoreboard">
+        {{homeTeamScore}} - {{awayTeamScore}}
+      </span>
+      <span class="time">
+        {{gameMinutes}}:{{gameSeconds}}
+      </span>
+    </div>
+    <div class="header-team">
+      <img class="awayTeam logo">
+      <span class="team">Barcelona</span>
+      <div class="awayTeam player"></div>
+    </div>
   </div>
   <div class="body">
     <div class="home team-list">
@@ -27,14 +38,13 @@
           >
         {{player.number}}
       </div>
-      {{animationState}}
       <div *ngFor="let player of awayTeam" 
           class="awayTeam player"
           (@moveState.done)="animationDone()"
           [@moveState]="{
             value: animationState, 
             params: {x: 5 + (player.x * .865), y: 5 + (player.y * .85), ms: msToSimulate}}"
-          >
+      >
         {{player.number}}
       </div>
       <div 
@@ -51,6 +61,14 @@
         <span class="number">{{player.number}}</span>
       </p>
     </div>
+  </div>
+  <div class="goalNotification"
+    [class.show]="showGoalNotification"
+    [class.hide]="hideGoalNotification">
+      GOL
+      {{gameMinutes}}'
+      {{playerScored.number}}
+      {{playerScored.name}}
   </div>
   <button (click)="runClick()">RUN</button>
 </div>
