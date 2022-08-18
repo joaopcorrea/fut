@@ -1,7 +1,7 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, OnInit } from '@angular/core';
 import { Ball } from '../ball/ball';
-import { IPlayer } from '../player/iplayer';
+import { Player, Position } from '../player/player';
 
 @Component({
   selector: 'app-field',
@@ -28,6 +28,9 @@ import { IPlayer } from '../player/iplayer';
   ]
 })
 export class FieldComponent implements OnInit {
+
+  homeTeamSide: FieldSide = FieldSide.LEFT;
+  awayTeamSide: FieldSide = FieldSide.RIGHT;
   
   public animationState = 'stop';
 
@@ -41,17 +44,18 @@ export class FieldComponent implements OnInit {
   gameTimer: any;
   isRunning: boolean = false;
 
-  homeTeam: IPlayer[] = [];
-  awayTeam: IPlayer[] = [];
-  players: IPlayer[] = [];
+  homeTeam: Player[] = [];
+  awayTeam: Player[] = [];
+  players: Player[] = [];
   
-  playerWithBall = 0;
-  teamWithBall: TeamSide = TeamSide.HOME;
+  idPlayerWithBall = 0;
+  // teamWithBall: TeamSide = TeamSide.HOME;
+  sideWithBall: FieldSide = FieldSide.LEFT;
 
-  playerScored = {} as IPlayer;
+  playerScored = {} as Player;
 
-  homeGoalKeeper = 1;
-  awayGoalKeeper = 12;
+  homeGoalKeeper: Player = {} as Player;
+  awayGoalKeeper: Player = {} as Player;
 
   homeStartingPlayer = 10;
   homeSecondStartingPlayer = 11;
@@ -104,7 +108,9 @@ export class FieldComponent implements OnInit {
         initialX: 0,
         initialY: 50,
         x: 0,
-        y: 50
+        y: 50,
+        stats: {},
+        position: Position.GK
       },
       {
         id: 2,
@@ -113,7 +119,9 @@ export class FieldComponent implements OnInit {
         initialX: 10,
         initialY: 30,
         x: 10,
-        y: 30
+        y: 30,
+        stats: {},
+        position: Position.CB
       },
       {
         id: 3,
@@ -122,7 +130,9 @@ export class FieldComponent implements OnInit {
         initialX: 10,
         initialY: 70,
         x: 10,
-        y: 70
+        y: 70,
+        stats: {},
+        position: Position.CB
       },
       {
         id: 4,
@@ -131,7 +141,9 @@ export class FieldComponent implements OnInit {
         initialX: 15,
         initialY: 10,
         x: 15,
-        y: 10
+        y: 10,
+        stats: {},
+        position: Position.FB
       },
       {
         id: 5,
@@ -140,7 +152,9 @@ export class FieldComponent implements OnInit {
         initialX: 15,
         initialY: 90,
         x: 15,
-        y: 90
+        y: 90,
+        stats: {},
+        position: Position.FB
       },
       {
         id: 6,
@@ -149,7 +163,9 @@ export class FieldComponent implements OnInit {
         initialX: 25,
         initialY: 40,
         x: 25,
-        y: 40
+        y: 40,
+        stats: {},
+        position: Position.CDM
       },
       {
         id: 7,
@@ -158,7 +174,9 @@ export class FieldComponent implements OnInit {
         initialX: 25,
         initialY: 60,
         x: 25,
-        y: 60
+        y: 60,
+        stats: {},
+        position: Position.CDM
       },
       {
         id: 8,
@@ -167,7 +185,9 @@ export class FieldComponent implements OnInit {
         initialX: 35,
         initialY: 20,
         x: 35,
-        y: 20
+        y: 20,
+        stats: {},
+        position: Position.WIN
       },
       {
         id: 9,
@@ -176,7 +196,9 @@ export class FieldComponent implements OnInit {
         initialX: 35,
         initialY: 80,
         x: 35,
-        y: 80
+        y: 80,
+        stats: {},
+        position: Position.WIN
       },
       {
         id: 10,
@@ -185,7 +207,9 @@ export class FieldComponent implements OnInit {
         initialX: 45,
         initialY: 30,
         x: 45,
-        y: 30
+        y: 30,
+        stats: {},
+        position: Position.ST
       },
       {
         id: 11,
@@ -194,7 +218,9 @@ export class FieldComponent implements OnInit {
         initialX: 45,
         initialY: 70,
         x: 45,
-        y: 70
+        y: 70,
+        stats: {},
+        position: Position.ST
       }
     ];
 
@@ -206,7 +232,9 @@ export class FieldComponent implements OnInit {
         initialX: 100,
         initialY: 50,
         x: 100,
-        y: 50
+        y: 50,
+        stats: {},
+        position: Position.GK
       },
       {
         id: 13,
@@ -215,7 +243,9 @@ export class FieldComponent implements OnInit {
         initialX: 90,
         initialY: 30,
         x: 90,
-        y: 30
+        y: 30,
+        stats: {},
+        position: Position.CB
       },
       {
         id: 14,
@@ -224,7 +254,9 @@ export class FieldComponent implements OnInit {
         initialX: 90,
         initialY: 50,
         x: 90,
-        y: 50
+        y: 50,
+        stats: {},
+        position: Position.CB
       },
       {
         id: 15,
@@ -233,7 +265,9 @@ export class FieldComponent implements OnInit {
         initialX: 90,
         initialY: 70,
         x: 90,
-        y: 70
+        y: 70,
+        stats: {},
+        position: Position.CB
       },
       {
         id: 16,
@@ -242,7 +276,9 @@ export class FieldComponent implements OnInit {
         initialX: 80,
         initialY: 10,
         x: 80,
-        y: 10
+        y: 10,
+        stats: {},
+        position: Position.CDM
       },
       {
         id: 17,
@@ -251,7 +287,9 @@ export class FieldComponent implements OnInit {
         initialX: 80,
         initialY: 90,
         x: 80,
-        y: 90
+        y: 90,
+        stats: {},
+        position: Position.CDM
       },
       {
         id: 18,
@@ -260,7 +298,9 @@ export class FieldComponent implements OnInit {
         initialX: 70,
         initialY: 30,
         x: 70,
-        y: 30
+        y: 30,
+        stats: {},
+        position: Position.CM
       },
       {
         id: 19,
@@ -269,7 +309,9 @@ export class FieldComponent implements OnInit {
         initialX: 70,
         initialY: 70,
         x: 70,
-        y: 70
+        y: 70,
+        stats: {},
+        position: Position.CM
       },
       {
         id: 20,
@@ -278,7 +320,9 @@ export class FieldComponent implements OnInit {
         initialX: 65,
         initialY: 50,
         x: 65,
-        y: 50
+        y: 50,
+        stats: {},
+        position: Position.CAM
       },
       {
         id: 21,
@@ -287,7 +331,9 @@ export class FieldComponent implements OnInit {
         initialX: 55,
         initialY: 30,
         x: 55,
-        y: 30
+        y: 30,
+        stats: {},
+        position: Position.ST
       },
       {
         id: 22,
@@ -296,49 +342,84 @@ export class FieldComponent implements OnInit {
         initialX: 55,
         initialY: 70,
         x: 55,
-        y: 70
+        y: 70,
+        stats: {},
+        position: Position.ST
       },
-    ]
+    ];
+
+    this.homeGoalKeeper = this.homeTeam.find(p => p.id == 1) as Player;
+    this.awayGoalKeeper = this.awayTeam.find(p => p.id == 12) as Player;
   }
 
   simulateGame() {
     this.homeTeam.forEach(player => {
-      this.simulatePlayer(player, TeamSide.HOME)
+      this.simulatePlayer(player, this.homeTeamSide)
     });
 
     this.awayTeam.forEach(player => {
-      this.simulatePlayer(player, TeamSide.AWAY)
+      this.simulatePlayer(player, this.awayTeamSide)
     });
 
     this.animationState = 'move';
 
     if (this.isGoal) {
-      this.scoreGoal(this.teamWithBall);
+      this.scoreGoal(this.sideWithBall);
       this.isGoal = false;
       return;
     } 
     else if (this.isGoalKick) {
-      this.goalKick(this.teamWithBall);
+      this.goalKick(this.sideWithBall);
       this.isGoalKick = false;
       return;
     }
 
-    if (this.gameMinutes > 5 && !this.teamsSwapped) {
+    if (this.gameMinutes > 46 && !this.teamsSwapped) {
       this.swapTeams();
     }
-
-    this.setBallPosition();
   }
 
-  resetPlayerPositions() {
+  resetPlayerPositions(startWithBall = true) {
     this.homeTeam.forEach(player => {
-      player.x = player.initialX;
-      player.y = player.initialY;
+      if (player.id == this.homeStartingPlayer && 
+          this.sideWithBall == this.homeTeamSide &&
+          startWithBall) {
+        player.x = this.homeTeamSide == FieldSide.LEFT ? 49 : 52;
+        player.y = 46;
+
+        this.setBallPosition(player);
+      }
+      else if (player.id == this.homeSecondStartingPlayer && 
+               this.sideWithBall == this.homeTeamSide &&
+               startWithBall) {
+        player.x = this.homeTeamSide == FieldSide.LEFT ? 49 : 52;
+        player.y = 55;
+      }
+      else {
+        player.x = player.initialX;
+        player.y = player.initialY;
+      }
     });
 
     this.awayTeam.forEach(player => {
-      player.x = player.initialX;
-      player.y = player.initialY;
+      if (player.id == this.awayStartingPlayer && 
+          this.sideWithBall == this.awayTeamSide &&
+          startWithBall) {
+        player.x = this.awayTeamSide == FieldSide.LEFT ? 49 : 52;
+        player.y = 46;
+        
+        this.setBallPosition(player);
+      }
+      else if (player.id == this.awaySecondStartingPlayer && 
+               this.sideWithBall == this.awayTeamSide && 
+               startWithBall) {
+        player.x = this.awayTeamSide == FieldSide.LEFT ? 49 : 52;
+        player.y = 55;
+      }
+      else {
+        player.x = player.initialX;
+        player.y = player.initialY;
+      }
     });
 
     this.animationState = 'move';
@@ -359,34 +440,20 @@ export class FieldComponent implements OnInit {
   swapTeams() {
     this.stopSimulationTimer();
 
-    let tempTeam = this.homeTeam;
-    this.homeTeam = this.awayTeam;
-    this.awayTeam = tempTeam;
+    this.homeTeamSide = FieldSide.RIGHT;
+    this.awayTeamSide = FieldSide.LEFT;
 
-    let tempGoalKeeper = this.homeGoalKeeper;
-    this.homeGoalKeeper = this.awayGoalKeeper;
-    this.awayGoalKeeper = tempGoalKeeper;
-
-    let tempStartingPlayer = this.homeStartingPlayer;
-    this.homeStartingPlayer = this.awayStartingPlayer;
-    this.awayStartingPlayer = tempStartingPlayer;
-    
-    let tempSecondStartingPlayer  = this.homeSecondStartingPlayer;
-    this.homeSecondStartingPlayer = this.awaySecondStartingPlayer;
-    this.awaySecondStartingPlayer = tempSecondStartingPlayer;
-
-    this.teamWithBall = TeamSide.AWAY;
-    this.playerWithBall = this.awayStartingPlayer;
+    this.sideWithBall = FieldSide.LEFT;
     
     this.teamsSwapped = true;
 
     this.homeTeam.forEach(p => {
-      p.x = 20;
+      p.x = 70;
       p.y = 110;
     });
 
     this.awayTeam.forEach(p => {
-      p.x = 70;
+      p.x = 20;
       p.y = 110;
     });
 
@@ -442,56 +509,51 @@ export class FieldComponent implements OnInit {
     }, this.msToSimulate / 10);
   }
 
-  setBallPosition() {
+  setBallPosition(player: Player) {
     if (this.stopBallPosition) {
       this.stopBallPosition = false;
       return;
     }
     
-    const isHomeTeam = this.teamWithBall == TeamSide.HOME;
-    let player: IPlayer;
-    if (isHomeTeam)
-      player = this.homeTeam.find(p => p.id == this.playerWithBall) as IPlayer;
-    else 
-      player = this.awayTeam.find(p => p.id == this.playerWithBall) as IPlayer;
+    // const isHomeTeam = this.teamWithBall == TeamSide.HOME;
+    // let player: Player;
+    // if (isHomeTeam)
+    //   player = this.homeTeam.find(p => p.id == this.playerWithBall) as Player;
+    // else 
+    //   player = this.awayTeam.find(p => p.id == this.playerWithBall) as Player;
 
-    this.ball.x = player.x + (isHomeTeam ? 2 : -1);
+    this.ball.x = player.x + 
+      (this.sideWithBall == FieldSide.LEFT ? 2 : -1);
     this.ball.y = player.y + 2.5;
+
+    this.idPlayerWithBall = player.id;
   }
 
-  goalKick(lastTeamSide: TeamSide) {
+  goalKick(lastTeamSide: FieldSide) {
     this.stopSimulationTimer();
 
-    console.log('kick: tiro de meta');
-
     setTimeout(() => {
-      let gk: IPlayer;
+      let gk: Player;
 
-      this.resetPlayerPositions();
+      this.resetPlayerPositions(false);
 
-      if (lastTeamSide == TeamSide.HOME) {
-        this.playerWithBall = this.awayGoalKeeper;
-        this.teamWithBall = TeamSide.AWAY;
-        this.ball = {
-          x: 99,
-          y: this.goalKickSide == GoalKickSide.UP ? 40 : 62
-        }
+      let goalKeeper: Player;
 
-        gk = this.awayTeam.find(p => p.id == this.awayGoalKeeper) as IPlayer;
-        gk.x = 102;
-        gk.y = this.goalKickSide == GoalKickSide.UP ? 40 : 62;
-      } else {
-        this.playerWithBall = this.homeGoalKeeper;
-        this.teamWithBall = TeamSide.HOME;
-        this.ball = {
-          x: 3,
-          y: this.goalKickSide == GoalKickSide.UP ? 40 : 62
-        }
-
-        gk = this.homeTeam.find(p => p.id == this.homeGoalKeeper) as IPlayer;
-        gk.x = -2;
-        gk.y = this.goalKickSide == GoalKickSide.UP ? 40 : 62;
+      if (lastTeamSide == this.homeTeamSide) {
+        goalKeeper = this.awayGoalKeeper;
+        
+      } 
+      else {
+        goalKeeper = this.homeGoalKeeper;
       }
+
+      goalKeeper.x = 
+        lastTeamSide == FieldSide.RIGHT ? 1 : 100;
+      goalKeeper.y = 
+        this.goalKickSide == GoalKickSide.UP ? 40 : 60
+
+      this.changeSideWithBall();
+      this.setBallPosition(goalKeeper);
 
       setTimeout(() => {
         this.startSimulationTimer();
@@ -500,43 +562,27 @@ export class FieldComponent implements OnInit {
     }, this.msToSimulate * 5);
   }
 
-  scoreGoal(teamScored: TeamSide) {
+  changeSideWithBall() {
+    this.sideWithBall = 
+      this.sideWithBall == FieldSide.LEFT ?
+        FieldSide.RIGHT :
+        FieldSide.LEFT;
+  }
+
+  scoreGoal(sideScored: FieldSide) {
     this.stopSimulationTimer();
 
     this.showGoal();
 
     setTimeout(() => {
-      this.resetPlayerPositions();
-
-      if (teamScored == TeamSide.HOME) {
+      if (sideScored == this.homeTeamSide) {
         this.homeTeamScore++;
-        this.playerWithBall = this.awayStartingPlayer;
-        this.teamWithBall = TeamSide.AWAY;
-
-        this.ball = { x: 50.5, y: 50 };
-
-        let player = this.awayTeam.find(p => p.id == this.awayStartingPlayer) as IPlayer;
-        player.x = 52;
-        player.y = 45;
-
-        player = this.awayTeam.find(p => p.id == this.awaySecondStartingPlayer) as IPlayer;
-        player.x = 52;
-        player.y = 55;
       } else {
         this.awayTeamScore++;
-        this.playerWithBall = this.homeStartingPlayer;
-        this.teamWithBall = TeamSide.HOME;
-
-        this.ball = { x: 50.5, y: 50 };
-
-        let player = this.homeTeam.find(p => p.id == this.homeStartingPlayer) as IPlayer;
-        player.x = 47;
-        player.y = 45
-
-        player = this.homeTeam.find(p => p.id == this.homeSecondStartingPlayer) as IPlayer;
-        player.x = 47;
-        player.y = 55;
       }
+
+      this.changeSideWithBall();
+      this.resetPlayerPositions();
 
       setTimeout(() => {
         this.startSimulationTimer();
@@ -545,7 +591,7 @@ export class FieldComponent implements OnInit {
     }, this.msToSimulate * 10);
   }
 
-  kick(player: IPlayer, teamSide: TeamSide) {
+  kick(player: Player, fieldSide: FieldSide) {
     console.log(`kick: ${player.name} chutou a bola para o gol`);
     
     //verifica se acertou gol
@@ -556,7 +602,7 @@ export class FieldComponent implements OnInit {
         console.log('kick: errou o chute');
 
         this.ball = { 
-          x: teamSide == TeamSide.HOME ? 
+          x: fieldSide == FieldSide.LEFT ? 
             this.getRndInteger(110, 115) : 
             this.getRndInteger(-12, -7),
 
@@ -575,20 +621,21 @@ export class FieldComponent implements OnInit {
         if (this.getRndInteger(1, 2) == 1) {
           console.log('kick: goleiro pegou');
 
-          if (teamSide == TeamSide.HOME) {
-            this.playerWithBall = this.awayGoalKeeper;
-            this.teamWithBall = TeamSide.AWAY;
-          } else {
-            this.playerWithBall = this.homeGoalKeeper;
-            this.teamWithBall = TeamSide.HOME;
-          }
-        } else {
+          let goalKeeper: Player = 
+            fieldSide == this.homeTeamSide
+            ? this.awayGoalKeeper
+            : this.homeGoalKeeper;
+
+          this.changeSideWithBall();
+          this.setBallPosition(goalKeeper);
+        } 
+        else {
           console.log('kick: gooooooool');
 
           this.playerScored = player;
 
           this.ball = {
-            x: teamSide == TeamSide.HOME ? 105 : -3,
+            x: fieldSide == FieldSide.LEFT ? 105 : -3,
             y: 50.5
           }
 
@@ -603,11 +650,11 @@ export class FieldComponent implements OnInit {
   }
 
   runClick() {
-    if (!this.playerWithBall) {
-      if (this.teamWithBall == TeamSide.HOME) 
-        this.playerWithBall = 10;
-      else
-        this.playerWithBall = 20;
+    if (!this.idPlayerWithBall) {
+      this.idPlayerWithBall = 
+        this.sideWithBall == this.homeTeamSide
+        ? 10
+        : 20;
     }
 
     if (this.isRunning) {
@@ -628,56 +675,52 @@ export class FieldComponent implements OnInit {
     // this.msToSimulate *= 0.5;
   }
 
-  simulatePlayer(player: IPlayer, teamSide: TeamSide) {    
-    let teamList = teamSide == TeamSide.HOME ? this.homeTeam : this.awayTeam;
+  simulatePlayer(player: Player, fieldSide: FieldSide) {    
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
     let playersInRangeToPass = this.getPlayersInRange(teamList, player,
       -20, 20, -20, 20);
 
-    let action: Action = this.chooseAction(player, teamSide, playersInRangeToPass);
+    let action: Action = this.chooseAction(player, fieldSide, playersInRangeToPass);
 
     switch(action) {
       case Action.ADVANCE:
-        this.advance(player, teamSide);
+        this.advance(player, fieldSide);
         break;
 
       case Action.PASS:
-        this.pass(player, teamSide, playersInRangeToPass);
+        this.pass(player, playersInRangeToPass);
         break;
 
       case Action.KICK:
-        this.kick(player, teamSide);
+        this.kick(player, fieldSide);
         break;
 
       case Action.RETREAT:
-        this.runBackward(player, teamSide);
+        this.runBackward(player, fieldSide);
         break;
     }
 
     this.animationState = 'move';
   }
 
-  advance(player: IPlayer, teamSide: TeamSide) {
-    let playersInRange: IPlayer[] = [];
-    if (teamSide == TeamSide.HOME) {
-      playersInRange = this.getPlayersInRange(this.awayTeam, player,
-        0, 5, -5, 5)
-    } else {
-      playersInRange = this.getPlayersInRange(this.homeTeam, player,
-        -5, 0, -5, 5)
-    }
+  advance(player: Player, fieldSide: FieldSide) {
+    let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
 
-    if (!playersInRange.length || this.playerWithBall != player.id) {
-      this.runForward(player, teamSide);
-    } else {
-      console.log('Jogadores por perto: ');
-      playersInRange.forEach(p => console.log(p));
+    let playersInRange = 
+      this.getPlayersInRange(againstTeamList, player,
+        fieldSide == FieldSide.LEFT ? 0 : -5,
+        fieldSide == FieldSide.LEFT ? 5 : 0, 
+        -5, 5);
 
+    if (!playersInRange.length || this.idPlayerWithBall != player.id) {
+      this.runForward(player, fieldSide);
+    } else {
       this.dribble(player, playersInRange);
     }
   }
 
-  runForward(player: IPlayer, teamSide: TeamSide) {
-    player.x += this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
+  runForward(player: Player, fieldSide: FieldSide) {
+    player.x += this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
     player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
 
     if (player.x < 0) player.x = 0;
@@ -685,13 +728,14 @@ export class FieldComponent implements OnInit {
     if (player.y < 0) player.y = 0;
     if (player.y > 100) player.y = 100;
 
-    console.log(`${player?.name} avança!`);
+    if (this.idPlayerWithBall == player.id)
+      this.setBallPosition(player);
   }
 
-  runBackward(player: IPlayer, teamSide: TeamSide) {
+  runBackward(player: Player, fieldSide: FieldSide) {
     if (player.x <= player.initialX - this.moveUnits ||
         player.x >= player.initialX + this.moveUnits) {
-      player.x -= this.moveUnits * (teamSide == TeamSide.HOME ? 1 : -1);
+      player.x -= this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
     }
 
     if (player.y <= player.initialY - this.moveUnits ||
@@ -703,11 +747,9 @@ export class FieldComponent implements OnInit {
     if (player.x > 100) player.x = 100;
     if (player.y < 0) player.y = 0;
     if (player.y > 100) player.y = 100;
-
-    console.log(`${player?.name} avança!`);
   }
 
-  dribble(player: IPlayer, playersInRange: IPlayer[]) {
+  dribble(player: Player, playersInRange: Player[]) {
     let playerDribbled = playersInRange[this.getRndInteger(0, playersInRange.length - 1)]
     
     console.log(`${player.name} está tentando driblar ${playerDribbled.name}`);
@@ -723,24 +765,24 @@ export class FieldComponent implements OnInit {
     
     let random = Math.random();
     if (random >= .5) {
-      this.playerWithBall = playerDribbled.id;
+      this.changeSideWithBall();
+      this.setBallPosition(playerDribbled);
       console.log('o marcador está esperto, acertou o bote na hora');
-
-      this.teamWithBall = this.teamWithBall == 
-        TeamSide.HOME ? TeamSide.AWAY : TeamSide.HOME;
     } else {
       console.log('que lindo drible!');
+      this.setBallPosition(player);
     }
   }
 
-  pass(player: IPlayer, teamSide: TeamSide, playersInRange: IPlayer[]) {
+  pass(player: Player, playersInRange: Player[]) {
     let playerToPass = playersInRange[this.getRndInteger(0, playersInRange.length-1)];
-    this.playerWithBall = playerToPass.id;
+    
+    this.setBallPosition(playerToPass);
 
     console.log(`${player.name} tocou a bola para ${playerToPass.name}`);
   }
 
-  getPlayersInRange(list: IPlayer[], player: IPlayer, 
+  getPlayersInRange(list: Player[], player: Player, 
       minX: number, maxX: number, 
       minY: number, maxY: number) {
     return list.filter(p => p.id != player.id && 
@@ -748,11 +790,9 @@ export class FieldComponent implements OnInit {
       p.y >= player.y + minY && p.y <= player.y + maxY);
   }
 
-  
-
-  chooseAction(player: IPlayer, teamSide: TeamSide, playersInRangeToPass: IPlayer[]) {
-    if (this.playerWithBall != player.id) {
-      if (this.teamWithBall == teamSide)
+  chooseAction(player: Player, fieldSide: FieldSide, playersInRangeToPass: Player[]) {
+    if (this.idPlayerWithBall != player.id) {
+      if (this.sideWithBall == fieldSide)
         return Action.ADVANCE;
       else
         return Action.RETREAT;
@@ -766,7 +806,7 @@ export class FieldComponent implements OnInit {
     minYToKick = 35;
     maxYToKick = 65;
 
-    if (teamSide == TeamSide.HOME) {
+    if (fieldSide == FieldSide.LEFT) {
       minXToKick = 90;
       maxXToKick = 100;
     } else {
@@ -785,10 +825,10 @@ export class FieldComponent implements OnInit {
   }
 }
 
-enum TeamSide {
-  HOME,
-  AWAY
-}
+// enum TeamSide {
+//   HOME,
+//   AWAY
+// }
 
 enum Action {
   ADVANCE = 1,
@@ -800,4 +840,9 @@ enum Action {
 enum GoalKickSide {
   DOWN,
   UP
+}
+
+enum FieldSide {
+  LEFT,
+  RIGHT
 }
