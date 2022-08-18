@@ -9,13 +9,15 @@ import { PlayerComponent } from './player/player.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BallComponent } from './ball/ball.component'
 import { MatIconModule } from '@angular/material/icon';
+import { PackComponent } from './pack/pack.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     FieldComponent,
     PlayerComponent,
-    BallComponent
+    BallComponent,
+    PackComponent
   ],
   imports: [
     BrowserModule,

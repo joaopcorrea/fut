@@ -1,0 +1,17 @@
+<div class="container">
+  <div class="spinner">
+    <div class="spinner__marker"></div>
+    <ul class="card-list">
+      <li *ngFor="let card of cards"
+        class="card"
+        [class.spinning]="spinning">
+        {{card}}
+      </li>
+    </ul>
+  </div>
+  <button 
+    class="open-button" 
+    (click)="clickOpen()">
+    Open</button>
+    {{reward}}
+</div>
