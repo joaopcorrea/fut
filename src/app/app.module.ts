@@ -8,6 +8,7 @@ import { PlayerComponent } from './player/player.component';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BallComponent } from './ball/ball.component'
+import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { BallComponent } from './ball/ball.component'
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]

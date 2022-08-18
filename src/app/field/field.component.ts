@@ -73,6 +73,8 @@ export class FieldComponent implements OnInit {
   showGoalNotification = false;
   hideGoalNotification = false;
 
+  teamsSwapped = false;
+
   constructor() { }
 
   showGoal() {
@@ -321,6 +323,10 @@ export class FieldComponent implements OnInit {
       return;
     }
 
+    if (this.gameMinutes > 5 && !this.teamsSwapped) {
+      this.swapTeams();
+    }
+
     this.setBallPosition();
   }
 
@@ -336,6 +342,68 @@ export class FieldComponent implements OnInit {
     });
 
     this.animationState = 'move';
+  }
+
+  swapPlayersPositions() {
+    this.homeTeam.forEach(player => {
+      player.initialX = 50 - player.initialX + 50;
+      player.initialY = 50 - player.initialY + 50;
+    });
+
+    this.awayTeam.forEach(player => {
+      player.initialX = 50 - player.initialX + 50;
+      player.initialY = 50 - player.initialY + 50;
+    });
+  }
+
+  swapTeams() {
+    this.stopSimulationTimer();
+
+    let tempTeam = this.homeTeam;
+    this.homeTeam = this.awayTeam;
+    this.awayTeam = tempTeam;
+
+    let tempGoalKeeper = this.homeGoalKeeper;
+    this.homeGoalKeeper = this.awayGoalKeeper;
+    this.awayGoalKeeper = tempGoalKeeper;
+
+    let tempStartingPlayer = this.homeStartingPlayer;
+    this.homeStartingPlayer = this.awayStartingPlayer;
+    this.awayStartingPlayer = tempStartingPlayer;
+    
+    let tempSecondStartingPlayer  = this.homeSecondStartingPlayer;
+    this.homeSecondStartingPlayer = this.awaySecondStartingPlayer;
+    this.awaySecondStartingPlayer = tempSecondStartingPlayer;
+
+    this.teamWithBall = TeamSide.AWAY;
+    this.playerWithBall = this.awayStartingPlayer;
+    
+    this.teamsSwapped = true;
+
+    this.homeTeam.forEach(p => {
+      p.x = 20;
+      p.y = 110;
+    });
+
+    this.awayTeam.forEach(p => {
+      p.x = 70;
+      p.y = 110;
+    });
+
+    this.ball = {x: 110, y: 50};
+
+    this.animationState = 'move';
+
+    setTimeout(() => {
+      this.swapPlayersPositions();
+      this.resetPlayerPositions();
+      this.ball = {x: 50.5, y: 50};
+
+      setTimeout(() => {
+        this.startSimulationTimer();  
+      }, this.msToSimulate * 5);
+
+    }, this.msToSimulate * 10);
   }
 
   stopSimulationTimer() {
@@ -552,6 +620,14 @@ export class FieldComponent implements OnInit {
     }
   }
 
+  decreaseGameSpeed() {
+    // this.msToSimulate *= 1.5;
+  }
+
+  increaseGameSpeed() {
+    // this.msToSimulate *= 0.5;
+  }
+
   simulatePlayer(player: IPlayer, teamSide: TeamSide) {    
     let teamList = teamSide == TeamSide.HOME ? this.homeTeam : this.awayTeam;
     let playersInRangeToPass = this.getPlayersInRange(teamList, player,
@@ -576,6 +652,8 @@ export class FieldComponent implements OnInit {
         this.runBackward(player, teamSide);
         break;
     }
+
+    this.animationState = 'move';
   }
 
   advance(player: IPlayer, teamSide: TeamSide) {

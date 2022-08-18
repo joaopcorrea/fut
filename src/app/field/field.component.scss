@@ -6,6 +6,8 @@
   opacity: 1;
   background-size: cover;
   background-position: center;
+  height: 100vh;
+  width: 100vw;
 
   .header {
     align-items: center;
@@ -87,7 +89,7 @@
   .body {
     justify-content: center;
     display: flex;
-    height: 70vh;
+    height: 60vh;
     padding: 0 5%;
     width: 90%;
 
@@ -207,6 +209,42 @@
     &.hide {
       animation-name: notification-hide;
       animation-duration: 500ms;
+    }
+  }
+
+  .speed-ui {
+    align-items: center;
+    background-color: #2f2da1;
+    border-radius: 5px;
+    width: 200px;
+    display: flex;
+    justify-content: space-around;
+    margin: 0 auto;
+
+    .button {
+      background-color: transparent;
+      color: #FAFAFA;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &.primary {
+        width: 4em;
+        height: 4em;
+
+        .mat-icon {
+          transform: scale(2);
+        }
+      }
+
+      &.secondary {
+        width: 3em;
+        height: 3em;
+
+        .mat-icon {
+          transform: scale(1.5);
+        }
+      }
     }
   }
 }
