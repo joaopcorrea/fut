@@ -28,58 +28,364 @@ import { Player, Position } from '../player/player';
   ]
 })
 export class FieldComponent implements OnInit {
-
-  homeTeamSide: FieldSide = FieldSide.LEFT;
-  awayTeamSide: FieldSide = FieldSide.RIGHT;
   
-  public animationState = 'stop';
-
-  gameMinutes = 0;
-  gameSeconds = 0;
-
-  ball: Ball = { x: 50.5, y: 50 };
-  stopBallPosition = false;
-
-  simulationTimer: any;
-  gameTimer: any;
-  isRunning: boolean = false;
-
-  homeTeam: Player[] = [];
-  awayTeam: Player[] = [];
-  players: Player[] = [];
+  private awayGoalKeeper: Player = {} as Player;
+  private awaySecondStartingPlayer = 22;
+  private awayStartingPlayer = 21;
+  private awayTeamSide: FieldSide = FieldSide.RIGHT;
   
-  idPlayerWithBall = 0;
-  // teamWithBall: TeamSide = TeamSide.HOME;
-  sideWithBall: FieldSide = FieldSide.LEFT;
-
-  playerScored = {} as Player;
-
-  homeGoalKeeper: Player = {} as Player;
-  awayGoalKeeper: Player = {} as Player;
-
-  homeStartingPlayer = 10;
-  homeSecondStartingPlayer = 11;
-
-  awayStartingPlayer = 21;
-  awaySecondStartingPlayer = 22;
-
-  homeTeamScore = 0;
-  awayTeamScore = 0;
-
-
-  private moveUnits = 3;
-  public msToSimulate = 300;
-
-  private isGoalKick = false;
+  private gameTimer: any;
   private goalKickSide: GoalKickSide = GoalKickSide.DOWN;
+
+  private homeGoalKeeper: Player = {} as Player;
+  private homeSecondStartingPlayer = 11;
+  private homeStartingPlayer = 10;
+  private homeTeamSide: FieldSide = FieldSide.LEFT;
+
+  private idPlayerWithBall = 0;
+  private isGoalKick = false;
   private isGoal = false;
 
-  showGoalNotification = false;
-  hideGoalNotification = false;
+  private moveUnits = 3;
 
-  teamsSwapped = false;
+  private sideWithBall: FieldSide = FieldSide.LEFT;
+  private simulationTimer: any;
+  private stopBallPosition = false;
+
+  private teamsSwapped = false;
+
+  
+  public animationState = 'stop';
+  public awayTeam: Player[] = [];
+  public awayTeamScore = 0;
+
+  public ball: Ball = { x: 50.5, y: 50 };
+  
+  public gameMinutes = 0;
+  public gameSeconds = 0;
+
+  public hideGoalNotification = false;
+  public homeTeam: Player[] = [];
+  public homeTeamScore = 0;
+
+  public isRunning: boolean = false;
+
+  public msToSimulate = 300;
+
+  public playerScored = {} as Player;
+
+  public showGoalNotification = false;
+
 
   constructor() { }
+
+  //#region Angular
+
+  ngOnInit(): void {
+    this.homeTeam = [
+      {
+        id: 1,
+        name: 'Keylor Navas',
+        number: 1,
+        initialX: 0,
+        initialY: 50,
+        x: 0,
+        y: 50,
+        stats: {},
+        position: Position.GOL
+      },
+      {
+        id: 2,
+        name: 'Sergio Ramos',
+        number: 2,
+        initialX: 10,
+        initialY: 30,
+        x: 10,
+        y: 30,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 3,
+        name: 'Marquinhos',
+        number: 5,
+        initialX: 10,
+        initialY: 70,
+        x: 10,
+        y: 70,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 4,
+        name: 'Marco Verratti',
+        number: 4,
+        initialX: 15,
+        initialY: 10,
+        x: 15,
+        y: 10,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 5,
+        name: 'Gerard Piqué',
+        number: 6,
+        initialX: 15,
+        initialY: 90,
+        x: 15,
+        y: 90,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 6,
+        name: 'Fábio M.',
+        number: 16,
+        initialX: 25,
+        initialY: 40,
+        x: 25,
+        y: 40,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 7,
+        name: 'Linetty',
+        number: 77,
+        initialX: 25,
+        initialY: 60,
+        x: 25,
+        y: 60,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 8,
+        name: 'O. Dembelé',
+        number: 9,
+        initialX: 35,
+        initialY: 20,
+        x: 35,
+        y: 20,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 9,
+        name: 'Lewandowsk',
+        number: 11,
+        initialX: 35,
+        initialY: 80,
+        x: 35,
+        y: 80,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 10,
+        name: 'C. Ronaldo',
+        number: 7,
+        initialX: 45,
+        initialY: 30,
+        x: 45,
+        y: 30,
+        stats: {},
+        position: Position.ATA
+      },
+      {
+        id: 11,
+        name: 'Messi',
+        number: 10,
+        initialX: 45,
+        initialY: 70,
+        x: 45,
+        y: 70,
+        stats: {},
+        position: Position.ATA
+      }
+    ];
+
+    this.awayTeam=[
+      {
+        id: 12,
+        name: 'Alisson',
+        number: 1,
+        initialX: 100,
+        initialY: 50,
+        x: 100,
+        y: 50,
+        stats: {},
+        position: Position.GOL
+      },
+      {
+        id: 13,
+        name: 'Salah',
+        number: 20,
+        initialX: 90,
+        initialY: 30,
+        x: 90,
+        y: 30,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 14,
+        name: 'R. Firmino',
+        number: 11,
+        initialX: 90,
+        initialY: 50,
+        x: 90,
+        y: 50,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 15,
+        name: 'Marcelo',
+        number: 4,
+        initialX: 90,
+        initialY: 70,
+        x: 90,
+        y: 70,
+        stats: {},
+        position: Position.ZAG
+      },
+      {
+        id: 16,
+        name: 'Mané',
+        number: 15,
+        initialX: 80,
+        initialY: 10,
+        x: 80,
+        y: 10,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 17,
+        name: 'Witsel',
+        number: 28,
+        initialX: 80,
+        initialY: 90,
+        x: 80,
+        y: 90,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 18,
+        name: 'Hazard',
+        number: 12,
+        initialX: 70,
+        initialY: 30,
+        x: 70,
+        y: 30,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 19,
+        name: 'Neymar',
+        number: 10,
+        initialX: 70,
+        initialY: 70,
+        x: 70,
+        y: 70,
+        stats: {},
+        position: Position.MC
+      },
+      {
+        id: 20,
+        name: 'Mbappé',
+        number: 7,
+        initialX: 65,
+        initialY: 50,
+        x: 65,
+        y: 50,
+        stats: {},
+        position: Position.ATA
+      },
+      {
+        id: 21,
+        name: 'Ibrahimovic',
+        number: 11,
+        initialX: 55,
+        initialY: 30,
+        x: 55,
+        y: 30,
+        stats: {},
+        position: Position.ATA
+      },
+      {
+        id: 22,
+        name: 'Haaland',
+        number: 9,
+        initialX: 55,
+        initialY: 70,
+        x: 55,
+        y: 70,
+        stats: {},
+        position: Position.ATA
+      },
+    ];
+
+    this.homeGoalKeeper = this.homeTeam.find(p => p.id == 1) as Player;
+    this.awayGoalKeeper = this.awayTeam.find(p => p.id == 12) as Player;
+
+    this.setBallPosition(
+      this.homeTeam.find(p => p.id == this.homeStartingPlayer) as Player
+    );
+    this.resetPlayerPositions();
+  }
+
+  //#endregion
+
+  //#region App Settings
+
+  clickPlayButton() {
+    this.startSimulationTimer();
+  }
+
+  clickPauseButton() {
+    this.stopSimulationTimer();
+  }
+
+  startSimulationTimer() {
+    this.startGameTimer();
+    this.isRunning = true;
+
+    this.animationState = 'move';
+    setTimeout(() => {
+      this.animationState = 'stop';
+    }, this.msToSimulate);
+    
+    this.simulationTimer = setInterval(() => {
+      this.simulateGame();
+    }, this.msToSimulate);
+  }
+
+  stopSimulationTimer() {
+    this.stopGameTimer();
+    clearInterval(this.simulationTimer);
+    this.simulationTimer = null;
+    this.isRunning = false;
+  }
+
+  startGameTimer() {
+    this.gameTimer = setInterval(() => {
+      if (this.gameSeconds == 59) {
+        this.gameMinutes++;
+        this.gameSeconds = 0;
+      } else {
+        this.gameSeconds++;
+      }
+    }, this.msToSimulate / 10);
+  }
+
+  stopGameTimer() {
+    clearInterval(this.gameTimer);
+  }
 
   showGoal() {
     setTimeout(() => {
@@ -99,258 +405,9 @@ export class FieldComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.homeTeam = [
-      {
-        id: 1,
-        name: 'Keylor Navas',
-        number: 1,
-        initialX: 0,
-        initialY: 50,
-        x: 0,
-        y: 50,
-        stats: {},
-        position: Position.GK
-      },
-      {
-        id: 2,
-        name: 'Sergio Ramos',
-        number: 2,
-        initialX: 10,
-        initialY: 30,
-        x: 10,
-        y: 30,
-        stats: {},
-        position: Position.CB
-      },
-      {
-        id: 3,
-        name: 'Marquinhos',
-        number: 5,
-        initialX: 10,
-        initialY: 70,
-        x: 10,
-        y: 70,
-        stats: {},
-        position: Position.CB
-      },
-      {
-        id: 4,
-        name: 'Marco Verratti',
-        number: 4,
-        initialX: 15,
-        initialY: 10,
-        x: 15,
-        y: 10,
-        stats: {},
-        position: Position.FB
-      },
-      {
-        id: 5,
-        name: 'Gerard Piqué',
-        number: 6,
-        initialX: 15,
-        initialY: 90,
-        x: 15,
-        y: 90,
-        stats: {},
-        position: Position.FB
-      },
-      {
-        id: 6,
-        name: 'Fábio M.',
-        number: 16,
-        initialX: 25,
-        initialY: 40,
-        x: 25,
-        y: 40,
-        stats: {},
-        position: Position.CDM
-      },
-      {
-        id: 7,
-        name: 'Linetty',
-        number: 77,
-        initialX: 25,
-        initialY: 60,
-        x: 25,
-        y: 60,
-        stats: {},
-        position: Position.CDM
-      },
-      {
-        id: 8,
-        name: 'O. Dembelé',
-        number: 9,
-        initialX: 35,
-        initialY: 20,
-        x: 35,
-        y: 20,
-        stats: {},
-        position: Position.WIN
-      },
-      {
-        id: 9,
-        name: 'Lewandowsk',
-        number: 11,
-        initialX: 35,
-        initialY: 80,
-        x: 35,
-        y: 80,
-        stats: {},
-        position: Position.WIN
-      },
-      {
-        id: 10,
-        name: 'C. Ronaldo',
-        number: 7,
-        initialX: 45,
-        initialY: 30,
-        x: 45,
-        y: 30,
-        stats: {},
-        position: Position.ST
-      },
-      {
-        id: 11,
-        name: 'Messi',
-        number: 10,
-        initialX: 45,
-        initialY: 70,
-        x: 45,
-        y: 70,
-        stats: {},
-        position: Position.ST
-      }
-    ];
+  //#endregion
 
-    this.awayTeam=[
-      {
-        id: 12,
-        name: 'Alisson',
-        number: 1,
-        initialX: 100,
-        initialY: 50,
-        x: 100,
-        y: 50,
-        stats: {},
-        position: Position.GK
-      },
-      {
-        id: 13,
-        name: 'Salah',
-        number: 20,
-        initialX: 90,
-        initialY: 30,
-        x: 90,
-        y: 30,
-        stats: {},
-        position: Position.CB
-      },
-      {
-        id: 14,
-        name: 'R. Firmino',
-        number: 11,
-        initialX: 90,
-        initialY: 50,
-        x: 90,
-        y: 50,
-        stats: {},
-        position: Position.CB
-      },
-      {
-        id: 15,
-        name: 'Marcelo',
-        number: 4,
-        initialX: 90,
-        initialY: 70,
-        x: 90,
-        y: 70,
-        stats: {},
-        position: Position.CB
-      },
-      {
-        id: 16,
-        name: 'Mané',
-        number: 15,
-        initialX: 80,
-        initialY: 10,
-        x: 80,
-        y: 10,
-        stats: {},
-        position: Position.CDM
-      },
-      {
-        id: 17,
-        name: 'Witsel',
-        number: 28,
-        initialX: 80,
-        initialY: 90,
-        x: 80,
-        y: 90,
-        stats: {},
-        position: Position.CDM
-      },
-      {
-        id: 18,
-        name: 'Hazard',
-        number: 12,
-        initialX: 70,
-        initialY: 30,
-        x: 70,
-        y: 30,
-        stats: {},
-        position: Position.CM
-      },
-      {
-        id: 19,
-        name: 'Neymar',
-        number: 10,
-        initialX: 70,
-        initialY: 70,
-        x: 70,
-        y: 70,
-        stats: {},
-        position: Position.CM
-      },
-      {
-        id: 20,
-        name: 'Mbappé',
-        number: 7,
-        initialX: 65,
-        initialY: 50,
-        x: 65,
-        y: 50,
-        stats: {},
-        position: Position.CAM
-      },
-      {
-        id: 21,
-        name: 'Ibrahimovic',
-        number: 11,
-        initialX: 55,
-        initialY: 30,
-        x: 55,
-        y: 30,
-        stats: {},
-        position: Position.ST
-      },
-      {
-        id: 22,
-        name: 'Haaland',
-        number: 9,
-        initialX: 55,
-        initialY: 70,
-        x: 55,
-        y: 70,
-        stats: {},
-        position: Position.ST
-      },
-    ];
-
-    this.homeGoalKeeper = this.homeTeam.find(p => p.id == 1) as Player;
-    this.awayGoalKeeper = this.awayTeam.find(p => p.id == 12) as Player;
-  }
+  //#region Game Functions
 
   simulateGame() {
     this.homeTeam.forEach(player => {
@@ -390,8 +447,8 @@ export class FieldComponent implements OnInit {
         this.setBallPosition(player);
       }
       else if (player.id == this.homeSecondStartingPlayer && 
-               this.sideWithBall == this.homeTeamSide &&
-               startWithBall) {
+              this.sideWithBall == this.homeTeamSide &&
+              startWithBall) {
         player.x = this.homeTeamSide == FieldSide.LEFT ? 49 : 52;
         player.y = 55;
       }
@@ -411,8 +468,8 @@ export class FieldComponent implements OnInit {
         this.setBallPosition(player);
       }
       else if (player.id == this.awaySecondStartingPlayer && 
-               this.sideWithBall == this.awayTeamSide && 
-               startWithBall) {
+              this.sideWithBall == this.awayTeamSide && 
+              startWithBall) {
         player.x = this.awayTeamSide == FieldSide.LEFT ? 49 : 52;
         player.y = 55;
       }
@@ -423,6 +480,88 @@ export class FieldComponent implements OnInit {
     });
 
     this.animationState = 'move';
+  }
+
+  setBallPosition(player: Player) {
+    if (this.stopBallPosition) {
+      this.stopBallPosition = false;
+      return;
+    }
+    
+    // const isHomeTeam = this.teamWithBall == TeamSide.HOME;
+    // let player: Player;
+    // if (isHomeTeam)
+    //   player = this.homeTeam.find(p => p.id == this.playerWithBall) as Player;
+    // else 
+    //   player = this.awayTeam.find(p => p.id == this.playerWithBall) as Player;
+
+    this.ball.x = player.x + 
+      (this.sideWithBall == FieldSide.LEFT ? 2 : -1);
+    this.ball.y = player.y + 2.5;
+
+    this.idPlayerWithBall = player.id;
+  }
+
+  scoreGoal(sideScored: FieldSide) {
+    this.stopSimulationTimer();
+
+    this.showGoal();
+
+    setTimeout(() => {
+      if (sideScored == this.homeTeamSide) {
+        this.homeTeamScore++;
+      } else {
+        this.awayTeamScore++;
+      }
+
+      this.changeSideWithBall();
+      this.resetPlayerPositions();
+
+      setTimeout(() => {
+        this.startSimulationTimer();
+      }, this.msToSimulate * 4);
+
+    }, this.msToSimulate * 10);
+  }
+
+  goalKick(lastTeamSide: FieldSide) {
+    this.stopSimulationTimer();
+
+    setTimeout(() => {
+      let gk: Player;
+
+      this.resetPlayerPositions(false);
+
+      let goalKeeper: Player;
+
+      if (lastTeamSide == this.homeTeamSide) {
+        goalKeeper = this.awayGoalKeeper;
+        
+      } 
+      else {
+        goalKeeper = this.homeGoalKeeper;
+      }
+
+      goalKeeper.x = 
+        lastTeamSide == FieldSide.RIGHT ? 1 : 100;
+      goalKeeper.y = 
+        this.goalKickSide == GoalKickSide.UP ? 40 : 60
+
+      this.changeSideWithBall();
+      this.setBallPosition(goalKeeper);
+
+      setTimeout(() => {
+        this.startSimulationTimer();
+      }, this.msToSimulate * 2);
+
+    }, this.msToSimulate * 5);
+  }
+
+  changeSideWithBall() {
+    this.sideWithBall = 
+      this.sideWithBall == FieldSide.LEFT ?
+        FieldSide.RIGHT :
+        FieldSide.LEFT;
   }
 
   swapPlayersPositions() {
@@ -473,122 +612,111 @@ export class FieldComponent implements OnInit {
     }, this.msToSimulate * 10);
   }
 
-  stopSimulationTimer() {
-    this.stopGameTimer();
-    clearInterval(this.simulationTimer);
-    this.simulationTimer = null;
-    this.isRunning = false;
-  }
+  //#endregion
 
-  startSimulationTimer() {
-    this.startGameTimer();
-    this.isRunning = true;
+  //#region Player Actions
+
+  simulatePlayer(player: Player, fieldSide: FieldSide) {    
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
+    let playersInRangeToPass = this.getPlayersInRange(teamList, player,
+      -20, 20, -20, 20);
+
+    let action: Action = this.chooseAction(player, fieldSide, playersInRangeToPass);
+
+    switch(action) {
+      case Action.ADVANCE:
+        this.advance(player, fieldSide);
+        break;
+
+      case Action.PASS:
+        this.pass(player, playersInRangeToPass);
+        break;
+
+      case Action.KICK:
+        this.kick(player, fieldSide);
+        break;
+
+      case Action.RETREAT:
+        this.runBackward(player, fieldSide);
+        break;
+    }
 
     this.animationState = 'move';
-    setTimeout(() => {
-      this.animationState = 'stop';
-    }, this.msToSimulate);
-    
-    this.simulationTimer = setInterval(() => {
-      this.simulateGame();
-    }, this.msToSimulate);
   }
 
-  stopGameTimer() {
-    clearInterval(this.gameTimer);
-  }
-
-  startGameTimer() {
-    this.gameTimer = setInterval(() => {
-      if (this.gameSeconds == 59) {
-        this.gameMinutes++;
-        this.gameSeconds = 0;
-      } else {
-        this.gameSeconds++;
-      }
-    }, this.msToSimulate / 10);
-  }
-
-  setBallPosition(player: Player) {
-    if (this.stopBallPosition) {
-      this.stopBallPosition = false;
-      return;
+  chooseAction(player: Player, fieldSide: FieldSide, playersInRangeToPass: Player[]) {
+    if (this.idPlayerWithBall != player.id) {
+      if (this.sideWithBall == fieldSide)
+        return Action.ADVANCE;
+      else
+        return Action.RETREAT;
     }
     
-    // const isHomeTeam = this.teamWithBall == TeamSide.HOME;
-    // let player: Player;
-    // if (isHomeTeam)
-    //   player = this.homeTeam.find(p => p.id == this.playerWithBall) as Player;
-    // else 
-    //   player = this.awayTeam.find(p => p.id == this.playerWithBall) as Player;
+    let minXToKick = 0;
+    let maxXToKick = 0;
+    let minYToKick = 0;
+    let maxYToKick = 0;
+    
+    minYToKick = 35;
+    maxYToKick = 65;
 
-    this.ball.x = player.x + 
-      (this.sideWithBall == FieldSide.LEFT ? 2 : -1);
-    this.ball.y = player.y + 2.5;
-
-    this.idPlayerWithBall = player.id;
+    if (fieldSide == FieldSide.LEFT) {
+      minXToKick = 90;
+      maxXToKick = 100;
+    } else {
+      minXToKick = 0;
+      maxXToKick = 10;
+    }
+    
+    if (player.x >= minXToKick && player.x <= maxXToKick &&
+        player.y >= minYToKick && player.y <= maxYToKick) {
+      return Action.KICK;
+    }
+    else if (!playersInRangeToPass.length)
+      return Action.ADVANCE;
+    else
+      return this.getRndInteger(1, 2);
   }
 
-  goalKick(lastTeamSide: FieldSide) {
-    this.stopSimulationTimer();
+  advance(player: Player, fieldSide: FieldSide) {
+    let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
 
-    setTimeout(() => {
-      let gk: Player;
+    let playersInRange = 
+      this.getPlayersInRange(againstTeamList, player,
+        fieldSide == FieldSide.LEFT ? 0 : -5,
+        fieldSide == FieldSide.LEFT ? 5 : 0, 
+        -5, 5);
 
-      this.resetPlayerPositions(false);
+    if (!playersInRange.length || this.idPlayerWithBall != player.id) {
+      this.runForward(player, fieldSide);
+    } else {
+      this.dribble(player, playersInRange);
+    }
+  }
 
-      let goalKeeper: Player;
-
-      if (lastTeamSide == this.homeTeamSide) {
-        goalKeeper = this.awayGoalKeeper;
-        
-      } 
-      else {
-        goalKeeper = this.homeGoalKeeper;
-      }
-
-      goalKeeper.x = 
-        lastTeamSide == FieldSide.RIGHT ? 1 : 100;
-      goalKeeper.y = 
-        this.goalKickSide == GoalKickSide.UP ? 40 : 60
-
+  dribble(player: Player, playersInRange: Player[]) {
+    let playerDribbled = playersInRange[this.getRndInteger(0, playersInRange.length - 1)]
+    
+    console.log(`${player.name} está tentando driblar ${playerDribbled.name}`);
+    
+    let tempX = player?.x;
+    let tempY = player?.y;
+    
+    player.x = playerDribbled.x;
+    player.y = playerDribbled.y;
+    
+    playerDribbled.x = tempX;
+    playerDribbled.y = tempY;
+    
+    let random = Math.random();
+    if (random >= .5) {
       this.changeSideWithBall();
-      this.setBallPosition(goalKeeper);
-
-      setTimeout(() => {
-        this.startSimulationTimer();
-      }, this.msToSimulate * 2);
-
-    }, this.msToSimulate * 5);
-  }
-
-  changeSideWithBall() {
-    this.sideWithBall = 
-      this.sideWithBall == FieldSide.LEFT ?
-        FieldSide.RIGHT :
-        FieldSide.LEFT;
-  }
-
-  scoreGoal(sideScored: FieldSide) {
-    this.stopSimulationTimer();
-
-    this.showGoal();
-
-    setTimeout(() => {
-      if (sideScored == this.homeTeamSide) {
-        this.homeTeamScore++;
-      } else {
-        this.awayTeamScore++;
-      }
-
-      this.changeSideWithBall();
-      this.resetPlayerPositions();
-
-      setTimeout(() => {
-        this.startSimulationTimer();
-      }, this.msToSimulate * 4);
-
-    }, this.msToSimulate * 10);
+      this.setBallPosition(playerDribbled);
+      console.log('o marcador está esperto, acertou o bote na hora');
+    } else {
+      console.log('que lindo drible!');
+      this.setBallPosition(player);
+    }
   }
 
   kick(player: Player, fieldSide: FieldSide) {
@@ -645,78 +773,12 @@ export class FieldComponent implements OnInit {
     }
   }
 
-  getRndInteger(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
-  }
+  pass(player: Player, playersInRange: Player[]) {
+    let playerToPass = playersInRange[this.getRndInteger(0, playersInRange.length-1)];
+    
+    this.setBallPosition(playerToPass);
 
-  runClick() {
-    if (!this.idPlayerWithBall) {
-      this.idPlayerWithBall = 
-        this.sideWithBall == this.homeTeamSide
-        ? 10
-        : 20;
-    }
-
-    if (this.isRunning) {
-      this.stopSimulationTimer();
-    } else {
-      this.isRunning = true;
-      setTimeout(() => {
-        this.startSimulationTimer();
-      }, this.msToSimulate);
-    }
-  }
-
-  decreaseGameSpeed() {
-    // this.msToSimulate *= 1.5;
-  }
-
-  increaseGameSpeed() {
-    // this.msToSimulate *= 0.5;
-  }
-
-  simulatePlayer(player: Player, fieldSide: FieldSide) {    
-    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
-    let playersInRangeToPass = this.getPlayersInRange(teamList, player,
-      -20, 20, -20, 20);
-
-    let action: Action = this.chooseAction(player, fieldSide, playersInRangeToPass);
-
-    switch(action) {
-      case Action.ADVANCE:
-        this.advance(player, fieldSide);
-        break;
-
-      case Action.PASS:
-        this.pass(player, playersInRangeToPass);
-        break;
-
-      case Action.KICK:
-        this.kick(player, fieldSide);
-        break;
-
-      case Action.RETREAT:
-        this.runBackward(player, fieldSide);
-        break;
-    }
-
-    this.animationState = 'move';
-  }
-
-  advance(player: Player, fieldSide: FieldSide) {
-    let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
-
-    let playersInRange = 
-      this.getPlayersInRange(againstTeamList, player,
-        fieldSide == FieldSide.LEFT ? 0 : -5,
-        fieldSide == FieldSide.LEFT ? 5 : 0, 
-        -5, 5);
-
-    if (!playersInRange.length || this.idPlayerWithBall != player.id) {
-      this.runForward(player, fieldSide);
-    } else {
-      this.dribble(player, playersInRange);
-    }
+    console.log(`${player.name} tocou a bola para ${playerToPass.name}`);
   }
 
   runForward(player: Player, fieldSide: FieldSide) {
@@ -749,39 +811,6 @@ export class FieldComponent implements OnInit {
     if (player.y > 100) player.y = 100;
   }
 
-  dribble(player: Player, playersInRange: Player[]) {
-    let playerDribbled = playersInRange[this.getRndInteger(0, playersInRange.length - 1)]
-    
-    console.log(`${player.name} está tentando driblar ${playerDribbled.name}`);
-    
-    let tempX = player?.x;
-    let tempY = player?.y;
-    
-    player.x = playerDribbled.x;
-    player.y = playerDribbled.y;
-    
-    playerDribbled.x = tempX;
-    playerDribbled.y = tempY;
-    
-    let random = Math.random();
-    if (random >= .5) {
-      this.changeSideWithBall();
-      this.setBallPosition(playerDribbled);
-      console.log('o marcador está esperto, acertou o bote na hora');
-    } else {
-      console.log('que lindo drible!');
-      this.setBallPosition(player);
-    }
-  }
-
-  pass(player: Player, playersInRange: Player[]) {
-    let playerToPass = playersInRange[this.getRndInteger(0, playersInRange.length-1)];
-    
-    this.setBallPosition(playerToPass);
-
-    console.log(`${player.name} tocou a bola para ${playerToPass.name}`);
-  }
-
   getPlayersInRange(list: Player[], player: Player, 
       minX: number, maxX: number, 
       minY: number, maxY: number) {
@@ -789,52 +818,26 @@ export class FieldComponent implements OnInit {
       p.x >= player.x + minX && p.x <= player.x + maxX &&
       p.y >= player.y + minY && p.y <= player.y + maxY);
   }
+  
+  //#endregion
 
-  chooseAction(player: Player, fieldSide: FieldSide, playersInRangeToPass: Player[]) {
-    if (this.idPlayerWithBall != player.id) {
-      if (this.sideWithBall == fieldSide)
-        return Action.ADVANCE;
-      else
-        return Action.RETREAT;
-    }
-    
-    let minXToKick = 0;
-    let maxXToKick = 0;
-    let minYToKick = 0;
-    let maxYToKick = 0;
-    
-    minYToKick = 35;
-    maxYToKick = 65;
+  //#region Utils
 
-    if (fieldSide == FieldSide.LEFT) {
-      minXToKick = 90;
-      maxXToKick = 100;
-    } else {
-      minXToKick = 0;
-      maxXToKick = 10;
-    }
-    
-    if (player.x >= minXToKick && player.x <= maxXToKick &&
-        player.y >= minYToKick && player.y <= maxYToKick) {
-      return Action.KICK;
-    }
-    else if (!playersInRangeToPass.length)
-      return Action.ADVANCE;
-    else
-      return this.getRndInteger(1, 2);
+  getRndInteger(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
   }
+
+  //#endregion
+
 }
 
-// enum TeamSide {
-//   HOME,
-//   AWAY
-// }
+//#region Enum
 
 enum Action {
-  ADVANCE = 1,
-  PASS = 2,
-  KICK = 3,
-  RETREAT = 4,
+  ADVANCE,
+  KICK,
+  PASS,
+  RETREAT,
 }
 
 enum GoalKickSide {
@@ -846,3 +849,5 @@ enum FieldSide {
   LEFT,
   RIGHT
 }
+
+//#endregion

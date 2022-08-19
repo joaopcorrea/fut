@@ -13,16 +13,8 @@ export interface Player {
 }
 
 export enum Position {
-  GK = 1,
-  FB = 2,
-  WB = 3,
-  CB = 4,
-  CDM = 5,
-  CM = 6,
-  CAM = 7,
-  SM = 8,
-  WIN = 9,
-  SF = 10,
-  CF = 11,
-  ST = 12
+  GOL,
+  ZAG,
+  MC,
+  ATA
 }

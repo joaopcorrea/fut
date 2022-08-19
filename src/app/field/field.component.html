@@ -71,30 +71,26 @@
       {{playerScored.name}}
   </div>
   <div class="speed-ui">
-    <button 
-      (click)="decreaseGameSpeed()"  
-      class="secondary button">
+    <button class="secondary button">
       <mat-icon class="material-icons-round">
         fast_rewind
       </mat-icon>
     </button>
-    <button
+    <button *ngIf="!isRunning"
       class="primary button"
-      (click)="runClick()"
-    >
-    <mat-icon *ngIf="isRunning"
-      class="material-icons-round">
-      pause
-    </mat-icon>
-    <mat-icon *ngIf="!isRunning"
-      class="material-icons-round">
-      play_arrow
-    </mat-icon>
+      (click)="clickPlayButton()">
+      <mat-icon class="material-icons-round">
+        play_arrow
+      </mat-icon>
     </button>
-    <button 
-      (click)="increaseGameSpeed()"
-      class="secondary button"
-    >
+    <button *ngIf="isRunning" 
+      class="primary button"
+      (click)="clickPauseButton()">
+      <mat-icon class="material-icons-round">
+        pause
+      </mat-icon>
+    </button>
+    <button class="secondary button">
       <mat-icon class="material-icons-round">
         fast_forward
       </mat-icon>
