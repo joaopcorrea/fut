@@ -7,8 +7,9 @@ import { FieldComponent } from './field/field.component';
 import { PlayerComponent } from './player/player.component';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { BallComponent } from './ball/ball.component'
+import { BallComponent } from './ball/ball.component';
 import { MatIconModule } from '@angular/material/icon';
+import { TeamComponent } from './team/team.component';
 import { PackComponent } from './pack/pack.component';
 
 @NgModule({
@@ -17,6 +18,7 @@ import { PackComponent } from './pack/pack.component';
     FieldComponent,
     PlayerComponent,
     BallComponent,
+    TeamComponent,
     PackComponent
   ],
   imports: [
