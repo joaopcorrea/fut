@@ -677,7 +677,7 @@ export class FieldComponent implements OnInit {
       console.log('carrinho lindo!');
     } else {
       console.log('errou o carrinho');
-      this.setBallPosition(player);
+      this.setBallPosition(opponent);
     }
   }
 
@@ -727,6 +727,10 @@ export class FieldComponent implements OnInit {
   getMovePositions(baseX: number, baseY: number, destX: number, destY: number) {
     let weightX = Math.abs(destX - baseX);
     let weightY = Math.abs(destY - baseY);
+
+    if (weightX == 0 && weightY == 0) {
+      return { x: 0, y: 0 };
+    }
 
     let weightDistance = 1 / (weightX + weightY);
 
@@ -825,15 +829,17 @@ export class FieldComponent implements OnInit {
       }
       else {
         let opponentsClose = this.getOpponentsClose(player, fieldSide);
-        if (opponentsClose.length)
-          return { action: Action.MARK, opponents: opponentsClose };
+        if (opponentsClose.length) {
+          if (player.position != Position.ATA && player.position != Position.GOL)
+            return { action: Action.MARK, opponents: opponentsClose };
+        }
 
-        else if (this.isInPositionLimit(player, fieldSide)) {
-          return { action: Action.STAY };
-        }
-        else {
+        // else if (this.isInPositionLimit(player, fieldSide)) {
+        //   return { action: Action.STAY };
+        // }
+        // else {
           return { action: Action.RETREAT };
-        }
+        // }
       }
     }
   }
@@ -843,22 +849,16 @@ export class FieldComponent implements OnInit {
 
     let minX;
     let maxX;
-    let minY;
-    let maxY;
+    let minY = 30;
+    let maxY = 70;
 
     if (fieldSide == FieldSide.LEFT) {
-      //TODO
-      minX = 0;
-      maxX = 0;
-      minY = 0;
-      maxY = 0;
+      minX = 90;
+      maxX = 100;
     }
     else {
-      //TODO
       minX = 0;
-      maxX = 0;
-      minY = 0;
-      maxY = 0;
+      maxX = 10;
     }
 
     let teammates = 
@@ -919,8 +919,8 @@ export class FieldComponent implements OnInit {
     let isClose;
     let isInRangeToTackle;
 
-    if (opponent.x >= player.x - 10 && opponent.x <= player.x + 10 &&
-        opponent.y >= player.y - 10 && opponent.y <= player.y + 10) {  
+    if (opponent.x >= player.x - 20 && opponent.x <= player.x + 20 &&
+        opponent.y >= player.y - 20 && opponent.y <= player.y + 20) {  
       
       isClose = true;
 
@@ -1065,8 +1065,22 @@ export class FieldComponent implements OnInit {
   }
 
   advance(player: Player, fieldSide: FieldSide) {
-    player.x += this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
-    player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
+    if (this.isPlayerInArea(player, fieldSide)) {
+      let position = this.getMovePositions(player.x, player.y, 
+        fieldSide == FieldSide.LEFT ? 100 : 0, 50);
+
+      player.x += position.x;
+      player.y += position.y;
+    }
+    else {
+      let moveY = this.getRndInteger(0, this.moveUnits * 5) / 10;
+      let moveX = this.moveUnits;
+      if (fieldSide == FieldSide.RIGHT) moveX *= -1;
+      if (this.getRndInteger(1,2) == 1) moveY *= -1;
+
+      player.x += moveX;
+      player.y += moveY;
+    }
 
     if (player.x < 0) player.x = 0;
     if (player.x > 100) player.x = 100;
@@ -1075,6 +1089,25 @@ export class FieldComponent implements OnInit {
 
     if (this.idPlayerWithBall == player.id)
       this.setBallPosition(player);
+  }
+
+  isPlayerInArea(player: Player, fieldSide: FieldSide) {
+    let minX;
+    let maxX;
+    let minY = 15;
+    let maxY = 85;
+
+    if (fieldSide == FieldSide.LEFT) {
+      minX = 80;
+      maxX = 100;
+    }
+    else {
+      minX = 0;
+      maxX = 20;
+    }
+    
+    return player.x >= minX && player.x <= maxX &&
+           player.y >= minY && player.y <= maxY
   }
 
   dribble(player: Player, opponentsInRange: Player[] = []) {
@@ -1204,6 +1237,7 @@ export class FieldComponent implements OnInit {
     if (opponentsClose.length) {
       if (this.getRndInteger(1, 10) >= 8) {
         let opponent = opponentsClose[this.getRndInteger(0, opponentsClose.length-1)];
+        this.changeSideWithBall();
         this.setBallPosition(opponent);
         console.log(`${player.name} errou o toque e ${opponent.name} pegou a bola`);
         return;
@@ -1215,15 +1249,11 @@ export class FieldComponent implements OnInit {
   }
 
   retreat(player: Player, fieldSide: FieldSide) {
-    if (player.x <= player.initialX - this.moveUnits ||
-        player.x >= player.initialX + this.moveUnits) {
-      player.x -= this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
-    }
+    let position = this.getMovePositions(player.x, player.y, 
+      player.initialX, player.initialY);
 
-    if (player.y <= player.initialY - this.moveUnits ||
-        player.y >= player.initialY + this.moveUnits) {
-      player.y -= this.getRndInteger(-this.moveUnits, this.moveUnits);
-    }
+    player.x += position.x;
+    player.y += position.y;
 
     if (player.x < 0) player.x = 0;
     if (player.x > 100) player.x = 100;
