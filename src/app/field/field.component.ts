@@ -1,7 +1,5 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, ElementRef, OnInit } from '@angular/core';
-import { access } from 'fs';
-import { isatty } from 'tty';
+import { Component, OnInit } from '@angular/core';
 import { Ball } from '../ball/ball';
 import { Player, Position } from '../player/player';
 
@@ -489,13 +487,6 @@ export class FieldComponent implements OnInit {
       this.stopBallPosition = false;
       return;
     }
-    
-    // const isHomeTeam = this.teamWithBall == TeamSide.HOME;
-    // let player: Player;
-    // if (isHomeTeam)
-    //   player = this.homeTeam.find(p => p.id == this.playerWithBall) as Player;
-    // else 
-    //   player = this.awayTeam.find(p => p.id == this.playerWithBall) as Player;
 
     this.ball.x = player.x + 
       (this.sideWithBall == FieldSide.LEFT ? 2 : -1);
@@ -619,25 +610,19 @@ export class FieldComponent implements OnInit {
   //#region Player Actions
 
   simulatePlayer(player: Player, fieldSide: FieldSide) {    
-    let action: Action = this.chooseAction(player, fieldSide);
+    let action = this.chooseAction(player, fieldSide);
 
-    switch(action) {
+    switch(action.action) {
       case Action.ADVANCE:
         this.advance(player, fieldSide);
       break;
 
       case Action.CHASE:
-      break;
-      
-      case Action.CROSS:
+        this.chase(player, fieldSide);
       break;
 
       case Action.DRIBBLE:
-        this.dribble(player);
-      break;
-      
-      case Action.FORWARD_PASS:
-
+        this.dribble(player, action.opponents);
       break;
 
       case Action.KICK:
@@ -645,136 +630,312 @@ export class FieldComponent implements OnInit {
       break;
         
       case Action.MARK:
+        this.mark(player, action.opponents);
       break;
 
       case Action.PASS:
-        this.pass(player, fieldSide);
+        this.pass(player, fieldSide, action.teammates);
       break;
 
       case Action.RETREAT:
-        this.runBackward(player, fieldSide);
+        this.retreat(player, fieldSide);
       break;
 
       case Action.STAY:
       break;
 
       case Action.TACKLE:
+        this.tackle(player, fieldSide);
       break;
     }
 
     this.animationState = 'move';
   }
 
-  
+  tackle(player: Player, fieldSide: FieldSide) {
+    let againstTeamList = fieldSide == this.homeTeamSide ? 
+      this.awayTeam : this.homeTeam;
 
-  chooseAction(player: Player, fieldSide: FieldSide) {
+    let opponent = againstTeamList
+      .find(p => p.id == this.idPlayerWithBall) as Player;
+    
+    console.log(`${player.name} está tentando dar carrinho no ${opponent.name}`);
+    
+    let tempX = player?.x;
+    let tempY = player?.y;
+    
+    player.x = opponent.x;
+    player.y = opponent.y;
+    
+    opponent.x = tempX;
+    opponent.y = tempY;
+    
+    let random = Math.random();
+    if (random >= .5) {
+      this.changeSideWithBall();
+      this.setBallPosition(player);
+      console.log('carrinho lindo!');
+    } else {
+      console.log('errou o carrinho');
+      this.setBallPosition(player);
+    }
+  }
+
+  chase(player: Player, fieldSide: FieldSide) {
+    let againstTeamList = fieldSide == this.homeTeamSide ? 
+      this.awayTeam : this.homeTeam;
+
+    let opponent = againstTeamList
+      .find(p => p.id == this.idPlayerWithBall) as Player;
+
+    // if (opponent.x >= player.x - 3 && opponent.x <= player.x + 3 &&
+    //     opponent.y >= player.y - 3 && opponent.y <= player.y + 3) {
+    //   return;
+    // }
+
+    let positions = this.getMovePositions
+      (player.x, player.y, opponent.x, opponent.y);
+
+    player.x += positions.x;
+    player.y += positions.y;
+
+    console.log(`${player.name} está perseguindo o ${opponent.name}`);
+  }
+
+  mark(player: Player, opponents: Player[] = []) {
+    if (!opponents.length) {
+      console.log('ERRO: não foi encontrado um oponente para marcar'); 
+      return;
+    }
+
+    let opponent = this.getClosestPlayer(player, opponents) as Player;
+
+    if (opponent.x >= player.x - 3 && opponent.x <= player.x + 3 &&
+        opponent.y >= player.y - 3 && opponent.y <= player.y + 3) {
+      return;
+    }
+
+    let positions = this.getMovePositions
+      (player.x, player.y, opponent.x, opponent.y);
+
+    player.x += positions.x;
+    player.y += positions.y;
+
+    console.log(`${player.name} está marcando o ${opponent.name}`);
+  }
+
+  getMovePositions(baseX: number, baseY: number, destX: number, destY: number) {
+    let weightX = Math.abs(destX - baseX);
+    let weightY = Math.abs(destY - baseY);
+
+    let weightDistance = 1 / (weightX + weightY);
+
+    let x = weightDistance * weightX * this.moveUnits;
+    let y = weightDistance * weightY * this.moveUnits; 
+
+    if (destX < baseX) {
+      x *= -1;
+    }
+
+    if (destY < baseY) {
+      y *= -1;
+    }
+    
+    return { x, y };
+  }
+
+  getClosestPlayer(playerBase: Player, playerList: Player[]): Player {
+    let closest: { player: Player, distance: number }; 
+    playerList
+      .forEach(p => {
+        let distance = Math.hypot(playerBase.x - p.x, playerBase.y - p.y);
+        if (!closest)
+          closest = { player: p, distance }
+        else if (distance < closest.distance)
+          closest.distance = distance;
+      });
+
+    return closest!.player;
+  }
+
+  chooseAction(player: Player, fieldSide: FieldSide): 
+              { action: Action, opponents?: Player[], teammates?: Player[] } {
     let isAttacking = fieldSide == this.sideWithBall ? true : false;
 
     if (this.isPlayerWithBall(player.id)) {
       if (this.isPlayerCloseToGoal(player, fieldSide)) {
-        return Action.KICK;
+        return { action: Action.KICK };
       }
       else if (this.isInFieldCorner(player, fieldSide)) {
-        return Action.CROSS;
+        let teammatesInBox = this.getTeammatesInBox(player, fieldSide);
+        if (teammatesInBox.length) {
+          return { action: Action.PASS, teammates: teammatesInBox };
+        }
       }
-      else {
-        let opponentsInFront = this.getOpponentsInFront(player, fieldSide) as Player[];
-        if (opponentsInFront.length) {
-          return { action: Action.DRIBBLE, opponents: opponentsInFront };
-          return Action.PASS;
+
+      let opponentsInFront = this.getOpponentsInFront(player, fieldSide) as Player[];
+      if (opponentsInFront.length) {
+        let teammatesCloseBehind = this.getTeammatesCloseBehind(player, fieldSide) as Player[];
+        if (teammatesCloseBehind.length) {
+          if (this.getRndInteger(1, 10) < 8) {
+            return { action: Action.PASS, teammates: teammatesCloseBehind };
+          }
         }
         else {
-          let teammatesUpFront = this.getTeammatesUpFront(player, fieldSide) as Player[];
-          if (teammatesUpFront.length) {
-            return { action: Action.FORWARD_PASS, teammates: teammatesUpFront };
+          let teammatesFarBehind = this.getTeammatesFarBehind(player, fieldSide) as Player[];
+          if (teammatesFarBehind.length) {
+            let rndPossibility = this.isPlayerInAttackingSide(player, fieldSide) ? 8 : 2;
+            if (this.getRndInteger(1, 10) > rndPossibility) {
+              return { action: Action.PASS, teammates: teammatesFarBehind };
+            }
           }
-
-          else {
-            return Action.ADVANCE;
-          }
-        }        
+        }
+        return { action: Action.DRIBBLE, opponents: opponentsInFront };
+      }
+      else {
+        let teammatesUpFront = this.getTeammatesUpFront(player, fieldSide) as Player[];
+        if (teammatesUpFront.length) {
+          return { action: Action.PASS, teammates: teammatesUpFront };
+        }
+        else {
+          return { action: Action.ADVANCE };
+        }
       }
     }
     else if (isAttacking) {
       if (this.isInPositionLimit(player, fieldSide)) {
-        return Action.STAY;
-        return Action.RETREAT;
+        if (this.getRndInteger(1,10) > 7)
+          return { action: Action.RETREAT };
+        
+        return { action: Action.STAY };
       }
       else {
-        return Action.ADVANCE;
+        return { action: Action.ADVANCE };
       }
     }
     else {
-      if (this.opponentWithBallIsClose(player, fieldSide)) {
-        if (this.isInRangeToTackle(player, fieldSide)) {
-          return Action.TACKLE;
+      let distanceOpponentWithBall = this.getDistanceOpponentWithBall(player, fieldSide);
+      if (distanceOpponentWithBall.isClose) {
+        if (distanceOpponentWithBall.isInRangeToTackle) {
+          return { action: Action.TACKLE };
         }
         else {
-          return Action.CHASE;
+          return { action: Action.CHASE };
         }
       }
-      else if (this.hasOpponentsClose(player, fieldSide)) {
-        return Action.MARK;
-      }
-      else if (this.isInPositionLimit(player, fieldSide)) {
-        return Action.STAY;
-      }
       else {
-        return Action.RETREAT;
+        let opponentsClose = this.getOpponentsClose(player, fieldSide);
+        if (opponentsClose.length)
+          return { action: Action.MARK, opponents: opponentsClose };
+
+        else if (this.isInPositionLimit(player, fieldSide)) {
+          return { action: Action.STAY };
+        }
+        else {
+          return { action: Action.RETREAT };
+        }
       }
     }
-
-    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
-    let playersInRangeToPass = this.getPlayersInRange(teamList, player,
-      -20, 20, -20, 20);
-
-    if (this.idPlayerWithBall != player.id) {
-      if (this.sideWithBall == fieldSide)
-        return Action.ADVANCE;
-      else
-        return Action.RETREAT;
-    }
-    
-    
-    else if (!playersInRangeToPass.length)
-      return Action.ADVANCE;
-    else
-      return this.getRndInteger(1, 3) == 1 ? Action.PASS : Action.ADVANCE;
   }
 
-  hasOpponentsClose(player: Player, fieldSide: FieldSide) {
+  getTeammatesInBox(player: Player, fieldSide: FieldSide) {
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
+
+    let minX;
+    let maxX;
+    let minY;
+    let maxY;
+
+    if (fieldSide == FieldSide.LEFT) {
+      //TODO
+      minX = 0;
+      maxX = 0;
+      minY = 0;
+      maxY = 0;
+    }
+    else {
+      //TODO
+      minX = 0;
+      maxX = 0;
+      minY = 0;
+      maxY = 0;
+    }
+
+    let teammates = 
+      this.getPlayersInRange(teamList, player, minX, maxX, minY, maxY);
+
+    return teammates;
+  }
+
+  isPlayerInAttackingSide(player: Player, fieldSide: FieldSide) {
+    let minX = 0;
+    let maxX = 50;
+
+    if (fieldSide == FieldSide.LEFT) {
+      minX = 51;
+      maxX = 100;
+    }
+
+    return player.x >= minX && player.x <= maxX;
+  }
+
+  getTeammatesFarBehind(player: Player, fieldSide: FieldSide): Player[] {
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
+
+    let teammates = 
+      this.getPlayersInRange(teamList, player,
+        fieldSide == FieldSide.LEFT ? -40 : 0,
+        fieldSide == FieldSide.LEFT ? 0 : 40, 
+        -40, 40);
+
+    return teammates;
+  }
+
+  getTeammatesCloseBehind(player: Player, fieldSide: FieldSide): Player[] {
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
+
+    let teammates = 
+      this.getPlayersInRange(teamList, player,
+        fieldSide == FieldSide.LEFT ? -20 : 0,
+        fieldSide == FieldSide.LEFT ? 0 : 20, 
+        -20, 20);
+
+    return teammates;
+  }
+
+  getOpponentsClose(player: Player, fieldSide: FieldSide) {
     let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
 
     let opponents = this.getPlayersInRange(againstTeamList, player, -10, 10, -10, 10);
 
-    if (opponents.length)
-      return true;
-    else
-      return false;
+    return opponents;
   }
 
-  isInRangeToTackle(player: Player, fieldSide: FieldSide) {
+  getDistanceOpponentWithBall(player: Player, fieldSide: FieldSide) {
     let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
 
     let opponent = againstTeamList.find(p => p.id == this.idPlayerWithBall) as Player;
 
-    if (opponent.x >= player.x - 5 && opponent.x <= player.x + 5 &&
-        opponent.y >= player.y - 5 && opponent.y <= player.y + 5)
-      return true;
-    else 
-      return false;
-  }
-
-  opponentWithBallIsClose(player: Player, fieldSide: FieldSide): boolean {
-    let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
-
-    let opponent = againstTeamList.find(p => p.id == this.idPlayerWithBall) as Player;
+    let isClose;
+    let isInRangeToTackle;
 
     if (opponent.x >= player.x - 10 && opponent.x <= player.x + 10 &&
-        opponent.y >= player.y - 10 && opponent.y <= player.y + 10)
-      return true;
-    else 
-      return false;
+        opponent.y >= player.y - 10 && opponent.y <= player.y + 10) {  
+      
+      isClose = true;
+
+      if (opponent.x >= player.x - 5 && opponent.x <= player.x + 5 &&
+          opponent.y >= player.y - 5 && opponent.y <= player.y + 5)
+        isInRangeToTackle = true;
+      else 
+        isInRangeToTackle = false;
+    } 
+    else {
+      isClose = false;
+      isInRangeToTackle = false;
+    }
+
+    return { isClose, isInRangeToTackle };
   }
 
   isInPositionLimit(player: Player, fieldSide: FieldSide): boolean {
@@ -833,7 +994,7 @@ export class FieldComponent implements OnInit {
       return false;
   }
   
-  haveTeammatesUpFront(player: Player, fieldSide: FieldSide): boolean {
+  getTeammatesUpFront(player: Player, fieldSide: FieldSide) {
     let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
 
     let playersUpFront = 
@@ -842,10 +1003,7 @@ export class FieldComponent implements OnInit {
         fieldSide == FieldSide.LEFT ? 20 : -1, 
         -20, 20);
 
-    if (playersUpFront.length)
-      return true;
-    else
-      return false;
+    return playersUpFront;
   }
 
   getOpponentsInFront(player: Player, fieldSide: FieldSide) {
@@ -857,13 +1015,7 @@ export class FieldComponent implements OnInit {
         fieldSide == FieldSide.LEFT ? 5 : -1, 
         -5, 5);
 
-
     return playersInFront;
-
-    if (playersInFront.length)
-      return true;
-    else
-      return false;
   }
   
   isInFieldCorner(player: Player, teamSide: FieldSide): boolean {
@@ -913,39 +1065,41 @@ export class FieldComponent implements OnInit {
   }
 
   advance(player: Player, fieldSide: FieldSide) {
-    let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
+    player.x += this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
+    player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
 
-    let playersInRange = 
-      this.getPlayersInRange(againstTeamList, player,
-        fieldSide == FieldSide.LEFT ? 0 : -5,
-        fieldSide == FieldSide.LEFT ? 5 : 0, 
-        -5, 5);
+    if (player.x < 0) player.x = 0;
+    if (player.x > 100) player.x = 100;
+    if (player.y < 0) player.y = 0;
+    if (player.y > 100) player.y = 100;
 
-    if (!playersInRange.length || this.idPlayerWithBall != player.id) {
-      this.runForward(player, fieldSide);
-    } else {
-      this.dribble(player, playersInRange);
-    }
+    if (this.idPlayerWithBall == player.id)
+      this.setBallPosition(player);
   }
 
-  dribble(player: Player, playersInRange: Player[]) {
-    let playerDribbled = playersInRange[this.getRndInteger(0, playersInRange.length - 1)]
+  dribble(player: Player, opponentsInRange: Player[] = []) {
+    if (!opponentsInRange.length) {
+      console.log('ERRO: não foi encontrado um oponente para driblar'); 
+      return;
+    }
+
+    let opponent = opponentsInRange[this.getRndInteger(0, opponentsInRange.length - 1)]
     
-    console.log(`${player.name} está tentando driblar ${playerDribbled.name}`);
+    console.log(`${player.name} está tentando driblar ${opponent.name}`);
     
     let tempX = player?.x;
     let tempY = player?.y;
     
-    player.x = playerDribbled.x;
-    player.y = playerDribbled.y;
+    player.x = opponent.x;
+    player.y = opponent.y;
     
-    playerDribbled.x = tempX;
-    playerDribbled.y = tempY;
+    opponent.x = tempX;
+    opponent.y = tempY;
     
     let random = Math.random();
     if (random >= .5) {
       this.changeSideWithBall();
-      this.setBallPosition(playerDribbled);
+      this.setBallPosition(opponent);
       console.log('o marcador está esperto, acertou o bote na hora');
     } else {
       console.log('que lindo drible!');
@@ -1037,38 +1191,30 @@ export class FieldComponent implements OnInit {
     }
   }
 
-  pass(player: Player, fieldSide: FieldSide) {
-    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
+  pass(player: Player, fieldSide: FieldSide, teammates: Player[] = []) {
+    if (!teammates.length) {
+      console.log('ERRO: não foi encontrado um companheiro para tocar'); 
+      return;
+    }
+    
+    let teammate = teammates[this.getRndInteger(0, teammates.length-1)];
+
     let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
+    let opponentsClose = this.getPlayersInRange(againstTeamList, teammate, -5, 5, -5, 5);
+    if (opponentsClose.length) {
+      if (this.getRndInteger(1, 10) >= 8) {
+        let opponent = opponentsClose[this.getRndInteger(0, opponentsClose.length-1)];
+        this.setBallPosition(opponent);
+        console.log(`${player.name} errou o toque e ${opponent.name} pegou a bola`);
+        return;
+      }
+    }
 
-    let playersInRange = this.getPlayersInRange(teamList, player, 
-      fieldSide == FieldSide.LEFT ? player.x - 20 : player.x,
-      fieldSide == FieldSide.LEFT ? player.x : player.x + 20,
-      player.y - 20, player.y + 20);
-
-    let playerToPass = playersInRange[this.getRndInteger(0, playersInRange.length-1)];
-
-    //TODO: verify if has any opponent near the playerToPass and verify if the pass occurs succesfully.
-
-    this.setBallPosition(playerToPass);
-
-    console.log(`${player.name} tocou a bola para ${playerToPass.name}`);
+    this.setBallPosition(teammate);
+    console.log(`${player.name} tocou a bola para ${teammate.name}`);
   }
 
-  runForward(player: Player, fieldSide: FieldSide) {
-    player.x += this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
-    player.y += this.getRndInteger(-this.moveUnits, this.moveUnits);
-
-    if (player.x < 0) player.x = 0;
-    if (player.x > 100) player.x = 100;
-    if (player.y < 0) player.y = 0;
-    if (player.y > 100) player.y = 100;
-
-    if (this.idPlayerWithBall == player.id)
-      this.setBallPosition(player);
-  }
-
-  runBackward(player: Player, fieldSide: FieldSide) {
+  retreat(player: Player, fieldSide: FieldSide) {
     if (player.x <= player.initialX - this.moveUnits ||
         player.x >= player.initialX + this.moveUnits) {
       player.x -= this.moveUnits * (fieldSide == FieldSide.LEFT ? 1 : -1);
@@ -1109,9 +1255,7 @@ export class FieldComponent implements OnInit {
 enum Action {
   ADVANCE,
   CHASE,
-  CROSS,
   DRIBBLE,
-  FORWARD_PASS,
   KICK,
   MARK,
   PASS,
