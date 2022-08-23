@@ -36,7 +36,7 @@
             value: animationState, 
             params: {x: 5 + (player.x * .865), y: 5 + (player.y * .85), ms: msToSimulate}}"
           >
-        {{player.number}}
+        {{player.id}}
       </div>
       <div *ngFor="let player of awayTeam" 
           class="awayTeam player"
@@ -45,7 +45,7 @@
             value: animationState, 
             params: {x: 5 + (player.x * .865), y: 5 + (player.y * .85), ms: msToSimulate}}"
       >
-        {{player.number}}
+        {{player.id}}
       </div>
       <div 
         class="ball"

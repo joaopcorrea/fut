@@ -70,7 +70,7 @@ export class FieldComponent implements OnInit {
 
   public isRunning: boolean = false;
 
-  public msToSimulate = 300;
+  public msToSimulate = 350;
 
   public playerScored = {} as Player;
 
@@ -628,7 +628,7 @@ export class FieldComponent implements OnInit {
       break;
         
       case Action.MARK:
-        this.mark(player, action.opponents);
+        this.mark(player, fieldSide, action.opponents);
       break;
 
       case Action.PASS:
@@ -682,13 +682,21 @@ export class FieldComponent implements OnInit {
     let opponent = againstTeamList
       .find(p => p.id == this.idPlayerWithBall) as Player;
 
-    // if (opponent.x >= player.x - 3 && opponent.x <= player.x + 3 &&
-    //     opponent.y >= player.y - 3 && opponent.y <= player.y + 3) {
-    //   return;
-    // }
+    if (opponent.x >= player.x - 3 && opponent.x <= player.x + 3 &&
+        opponent.y >= player.y - 3 && opponent.y <= player.y + 3) {
+      return;
+    }
 
-    let positions = this.getMovePositions
-      (player.x, player.y, opponent.x, opponent.y);
+    let positions;
+    
+    if (fieldSide == FieldSide.LEFT) {
+      positions = this.getMovePositions
+        (player.x, player.y, opponent.x - 3, opponent.y); 
+    }
+    else {
+      positions = this.getMovePositions
+        (player.x, player.y, opponent.x + 3, opponent.y);
+    }
 
     player.x += positions.x;
     player.y += positions.y;
@@ -696,7 +704,7 @@ export class FieldComponent implements OnInit {
     console.log(`${player.name} está perseguindo o ${opponent.name}`);
   }
 
-  mark(player: Player, opponents: Player[] = []) {
+  mark(player: Player, fieldSide: FieldSide, opponents: Player[] = []) {
     if (!opponents.length) {
       console.log('ERRO: não foi encontrado um oponente para marcar'); 
       return;
@@ -710,7 +718,9 @@ export class FieldComponent implements OnInit {
     }
 
     let positions = this.getMovePositions
-      (player.x, player.y, opponent.x, opponent.y);
+      (player.x, player.y, 
+        opponent.x  + fieldSide == FieldSide.LEFT ? -3 : 3, 
+        opponent.y);
 
     player.x += positions.x;
     player.y += positions.y;
@@ -807,11 +817,8 @@ export class FieldComponent implements OnInit {
       }
     }
     else if (isAttacking) {
-      if (this.isInPositionLimit(player, fieldSide)) {
-        if (this.getRndInteger(1,10) > 7)
-          return { action: Action.RETREAT };
-        
-        return { action: Action.STAY };
+      if (this.isInFrontPosition(player, fieldSide)) {
+        return { action: Action.RETREAT };
       }
       else {
         return { action: Action.ADVANCE };
@@ -819,7 +826,8 @@ export class FieldComponent implements OnInit {
     }
     else {
       let distanceOpponentWithBall = this.getDistanceOpponentWithBall(player, fieldSide);
-      if (distanceOpponentWithBall.isClose) {
+      if (distanceOpponentWithBall.isClose &&
+          !distanceOpponentWithBall.isTeammateClose) {
         if (distanceOpponentWithBall.isInRangeToTackle) {
           return { action: Action.TACKLE };
         }
@@ -834,11 +842,16 @@ export class FieldComponent implements OnInit {
             return { action: Action.MARK, opponents: opponentsClose };
         }
 
+        if (this.isBehindPosition(player, fieldSide))
+          return { action: Action.ADVANCE };
+        else
+          return { action: Action.RETREAT };
+
         // else if (this.isInPositionLimit(player, fieldSide)) {
         //   return { action: Action.STAY };
         // }
         // else {
-          return { action: Action.RETREAT };
+          
         // }
       }
     }
@@ -905,8 +918,18 @@ export class FieldComponent implements OnInit {
 
   getOpponentsClose(player: Player, fieldSide: FieldSide) {
     let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
 
     let opponents = this.getPlayersInRange(againstTeamList, player, -10, 10, -10, 10);
+
+    opponents = opponents.filter(o => {
+      if (teamList.find(t => t.id != player.id &&
+        t.x >= o.x - 3 && t.x <= o.x + 3 && 
+        t.y >= o.y - 3 && t.y <= o.y + 3))
+        return false;
+      else
+        return true;
+    } );
 
     return opponents;
   }
@@ -916,16 +939,23 @@ export class FieldComponent implements OnInit {
       return { isClose: false, isInRangeToTackle: false };
     
     let againstTeamList = fieldSide == this.homeTeamSide ? this.awayTeam : this.homeTeam;
+    let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam; 
 
     let opponent = againstTeamList.find(p => p.id == this.idPlayerWithBall) as Player;
 
-    let isClose;
-    let isInRangeToTackle;
+    let isClose = false;
+    let isInRangeToTackle = false;
+    let isTeammateClose = false;
 
     if (opponent.x >= player.x - 20 && opponent.x <= player.x + 20 &&
         opponent.y >= player.y - 20 && opponent.y <= player.y + 20) 
     {    
       isClose = true;
+
+      if (teamList.find(p => p.id != player.id &&
+          p.x >= opponent.x - 3 && p.x <= opponent.x + 3 &&
+          p.y >= opponent.y - 3 && p.y <= opponent.y + 3))
+        isTeammateClose = true;
 
       let minX, maxX, minY, maxY;
       if (fieldSide == FieldSide.LEFT) {
@@ -942,18 +972,30 @@ export class FieldComponent implements OnInit {
       if (opponent.x >= minX && opponent.x <= maxX &&
           opponent.y >= minY && opponent.y <= maxY)
         isInRangeToTackle = true;
-      else 
-        isInRangeToTackle = false;
-    } 
-    else {
-      isClose = false;
-      isInRangeToTackle = false;
     }
 
-    return { isClose, isInRangeToTackle };
+    return { isClose, isInRangeToTackle, isTeammateClose };
   }
 
-  isInPositionLimit(player: Player, fieldSide: FieldSide): boolean {
+  isBehindPosition(player: Player, fieldSide: FieldSide) {
+    const position = this.getPlayerPosition(player, fieldSide);
+    
+    if (fieldSide == FieldSide.LEFT)
+      return player.x < position.minX;
+    else
+      return player.x > position.maxX;
+  }
+
+  isInFrontPosition(player: Player, fieldSide: FieldSide) {
+    const position = this.getPlayerPosition(player, fieldSide);
+    
+    if (fieldSide == FieldSide.LEFT)
+      return player.x > position.maxX;
+    else
+      return player.x < position.minX;
+  }
+
+  getPlayerPosition(player: Player, fieldSide: FieldSide) {
     let minX;
     let maxX;
 
@@ -961,64 +1003,64 @@ export class FieldComponent implements OnInit {
       case Position.GOL:
         if (fieldSide == FieldSide.LEFT) {
           minX = 0;
-          maxX = 17;
+          maxX = 5;
         }
         else {
-          minX = 83;
+          minX = 95;
           maxX = 100;
         }
         break;
       
       case Position.ZAG:
         if (fieldSide == FieldSide.LEFT) {
-          minX = 0;
-          maxX = 60;
+          minX = this.ball.x - 30;
+          maxX = this.ball.x - 30;
         }
         else {
-          minX = 40;
-          maxX = 100;
+          minX = this.ball.x + 30;
+          maxX = this.ball.x + 30;
         }
         break;
 
       case Position.MC:
         if (fieldSide == FieldSide.LEFT) {
-          minX = 20;
-          maxX = 80;
+          minX = this.ball.x - 20;
+          maxX = this.ball.x ;
         }
         else {
-          minX = 20;
-          maxX = 80;
+          minX = this.ball.x;
+          maxX = this.ball.x + 20;
         }
         break;
 
       case Position.ATA:
         if (fieldSide == FieldSide.LEFT) {
-          minX = 40;
-          maxX = 100;
+          minX = this.ball.x + 10;
+          maxX = this.ball.x + 20;
         }
         else {
-          minX = 0;
-          maxX = 60;
+          minX = this.ball.x - 20;
+          maxX = this.ball.x - 10;
         }
         break;
     }
 
-    if (player.x >= maxX - 5 || player.x <= minX + 5)
-      return true;
-    else
-      return false;
+    if (minX < 0) minX = 0;
+    if (maxX > 100) maxX = 100;
+
+    return { minX, maxX };
   }
 
   getTeammatesCloseFront(player: Player, fieldSide: FieldSide) {
     let teamList = fieldSide == this.homeTeamSide ? this.homeTeam : this.awayTeam;
 
-    let playersUpFront = 
+    let playersCloseFront = 
       this.getPlayersInRange(teamList, player,
         fieldSide == FieldSide.LEFT ? 3 : -20,
         fieldSide == FieldSide.LEFT ? 20 : -3, 
         -20, 20);
 
-    return playersUpFront;
+    return playersCloseFront;
   }
   
   getTeammatesUpFront(player: Player, fieldSide: FieldSide) {
@@ -1026,8 +1068,8 @@ export class FieldComponent implements OnInit {
 
     let playersUpFront = 
       this.getPlayersInRange(teamList, player,
-        fieldSide == FieldSide.LEFT ? 1 : -25,
-        fieldSide == FieldSide.LEFT ? 25 : -1, 
+        fieldSide == FieldSide.LEFT ? 1 : -20,
+        fieldSide == FieldSide.LEFT ? 20 : -1, 
         -30, 30);
 
     return playersUpFront;
@@ -1283,11 +1325,16 @@ export class FieldComponent implements OnInit {
 
     this.setBallPosition(teammate);
     console.log(`${player.name} tocou a bola para ${teammate.name}`);
+
+    this.animationState = 'move';  
   }
 
   retreat(player: Player, fieldSide: FieldSide) {
-    let position = this.getMovePositions(player.x, player.y, 
-      player.initialX, player.initialY);
+    const playerPosition = this.getPlayerPosition(player, fieldSide);
+
+    const position = this.getMovePositions(player.x, player.y, 
+      player.initialX,
+      player.initialY);
 
     player.x += position.x;
     player.y += position.y;
